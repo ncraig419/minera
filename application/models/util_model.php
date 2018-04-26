@@ -1389,7 +1389,9 @@ class Util_model extends CI_Model {
 
 	// Check Minera ads-free
 	public function checkAdsFree() {
-		$check = @file_get_contents($this->config->item('minera_api_url').'/checkAds/'.$this->generateMineraId());
+		$this->redis->set('is_ads_free', true);
+        return true;
+		/*$check = @file_get_contents($this->config->item('minera_api_url').'/checkAds/'.$this->generateMineraId());
 		$checkE = json_decode($check);
 
 		if ($checkE->success) {
@@ -1400,7 +1402,7 @@ class Util_model extends CI_Model {
 			$this->redis->set('is_ads_free', false);
 		}
 
-		return $check;
+        return $check;*/
 	}
 
 	// Get ads url/tags from central server
