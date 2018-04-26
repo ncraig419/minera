@@ -41,7 +41,7 @@ function convertHashrate(hash)
 		return hash.toFixed(2) + 'Kh/s';
 }
 
-function convertMS(ms) 
+function convertMS(ms)
 {
 
 	var d, h, m, s;
@@ -97,7 +97,7 @@ function timer(counter)
 		//counter ended, do something here
 		return;
 	}
-	
+
 	if (count === 0)
 	{
 		$('.lockscreen-name').hide();
@@ -107,7 +107,7 @@ function timer(counter)
 	}
 	else
 		$('#time').html(count);
-	
+
 	setTimeout(function() {
 		timer(count);
 	}, 1000);
@@ -119,9 +119,9 @@ function saveSettings(hide, saveonly)
     if (saveonly === false)
     {
     	$('#modal-saving-label').html('Saving data, please wait...');
-    	$('#modal-saving').modal('show');		        
+    	$('#modal-saving').modal('show');
     }
-	
+
 	var saveUrl = _baseUrl+'/app/save_settings';
 	var formData = $('#minersettings').serialize();
 
@@ -139,7 +139,7 @@ function saveSettings(hide, saveonly)
 	});
 }
 
-function changeDonationWorth(profitability, value) 
+function changeDonationWorth(profitability, value)
 {
 
 	var amount = (profitability / 24 / 60 * value), string = (value > 0) ? 'about' : 'exactly', h = 0, new_value = 0, period = 0;
@@ -154,9 +154,9 @@ function changeDonationWorth(profitability, value)
 	{
     	period = value + ' minutes';
 	}
-	
+
 	$('.donation-worth').html('<small>Mining for ' + period + ' in a day your donation per MH/s worths ' + string + ':</small> <span class="label label-success"><i class="fa fa-btc"></i>&nbsp;' + amount.toFixed(8) + '</span>');
-	
+
 	if (value > 0 && value < 90)
 	{
 		$('.donation-mood').html('<i class="fa fa-smile-o"></i> Your support is much appreciate. Thank you!').removeClass().addClass('donation-mood badge bg-blue');
@@ -181,10 +181,10 @@ function changeDonationWorth(profitability, value)
 
 // Show or Hide the options related to the selected miner software
 function showHideMinerOptions(change)
-{	
+{
 
     var sel = $('#minerd-software option:selected').text().match(/\[Custom Miner\]/);
-    
+
     if ($('#minerd-software').val() !== 'cpuminer' && sel === null)
     {
 	    $('.options-selection').show();
@@ -226,7 +226,7 @@ function showHideMinerOptions(change)
 
     $('.detail-minerdsoftware').remove();
     $('.note-minerdsoftware').remove();
-    
+
     if (change)
     {
     	if ($('#minerd-software').val() === 'cpuminer')
@@ -257,40 +257,40 @@ function showHideMinerOptions(change)
 function createChart(period, text_period)
 {
 
-	
+
 	function redrawGraphs()
 	{
 	    areaHash.redraw();
 	    areaRej.redraw();
-		    
+
 	    return false;
 	}
-	
+
 	function updateGraphs(data)
 	{
 	    areaHash.setData(data);
 	    areaRej.setData(data);
-		    
+
 	    return false;
 	}
-		
+
 	/* Morris.js Charts */
 	// get Json data from stored_stats url (redis) and create the graphs
-	$.getJSON( _baseUrl+'/app/api?command=history_stats&type='+period, function( data ) 
+	$.getJSON( _baseUrl+'/app/api?command=history_stats&type='+period, function( data )
 	{
-	    var refresh = false, 
-	    	areaHash = {}, 
-	    	areaRej = {}, 
-	    	dataChart = Object.keys(data).map(function(key) { 
-					data[key].timestamp = data[key].timestamp*1000; 
+	    var refresh = false,
+	    	areaHash = {},
+	    	areaRej = {},
+	    	dataChart = Object.keys(data).map(function(key) {
+					data[key].timestamp = data[key].timestamp*1000;
 					data[key].hashrate = (data[key].hashrate/1000/1000).toFixed(2);
-					data[key].pool_hashrate = (data[key].pool_hashrate/1000/1000).toFixed(2);									
+					data[key].pool_hashrate = (data[key].pool_hashrate/1000/1000).toFixed(2);
 					return data[key];
 			});
-	
+
 		if (dataChart.length > 0)
 		{
-			
+
 			if (refresh === false)
 			{
 				// Hashrate history graph
@@ -309,8 +309,8 @@ function createChart(period, text_period)
 					hideHover: 'auto',
 					behaveLikeLine: true
 
-				});	
-				
+				});
+
 				// Rejected/Errors graph
 				areaRej = new Morris.Area({
 					element: 'rehw-chart-'+period,
@@ -331,31 +331,31 @@ function createChart(period, text_period)
 			{
 				updateGraphs(dataChart);
 			}
-			
+
 			$(window).resize(function() {
 				redrawGraphs();
 			});
-			
+
 			$('.sidebar-toggle').click(function() { redrawGraphs(); });
 		}
 		else
 		{
-			$('#hashrate-chart-'+period).css({'height': '100%', 'overflow': 'visible', 'margin-top': '20px'}).html('<div class="alert alert-warning"><i class="fa fa-warning"></i><b>Oops!</b> <small>No data collected, wait at least '+text_period+' to see the chart.</small></div>');	
-			$('#rehw-chart-'+period).css({'height': '100%', 'overflow': 'visible', 'margin-top': '20px'}).html('<div class="alert alert-warning"><i class="fa fa-warning"></i><b>Oops!</b> <small>No data collected, wait at least '+text_period+' to see the chart.</small></div>');	
+			$('#hashrate-chart-'+period).css({'height': '100%', 'overflow': 'visible', 'margin-top': '20px'}).html('<div class="alert alert-warning"><i class="fa fa-warning"></i><b>Oops!</b> <small>No data collected, wait at least '+text_period+' to see the chart.</small></div>');
+			$('#rehw-chart-'+period).css({'height': '100%', 'overflow': 'visible', 'margin-top': '20px'}).html('<div class="alert alert-warning"><i class="fa fa-warning"></i><b>Oops!</b> <small>No data collected, wait at least '+text_period+' to see the chart.</small></div>');
 
 		}
-		
+
 		$('.overlay').hide();
 		$('.loading-img').hide();
 	});
-	
+
 } //End get stored stats
 
 function createMon(key, hash, totalhash, maxHashrate, ac, re, hw, sh, freq, color)
 {
 
 	var col, toAppend, size, skin, thickness, fontsize, name, max;
-		
+
 	if (key === 'total')
 	{
 		col = 12;
@@ -376,19 +376,19 @@ function createMon(key, hash, totalhash, maxHashrate, ac, re, hw, sh, freq, colo
 		thickness = '.2';
 		fontsize = '8pt';
 	}
-	
+
 	if (freq)
 		name = key + ' @ ' + freq + 'Mhz';
 	else
-		name = key;			
+		name = key;
 
 	// Add per device knob graph
 	var devBox = '<div class="col-xs-'+col+' text-center" id="master-'+ key +'"><input type="text" class="'+ key +'" /><div class="knob-label"><p><strong>'+name+'</strong></p><p>A: '+ac+' - R: '+re+' - H: '+hw+'</p></div></div>';
-	
+
 	$('#master-'+key).remove();
-	
+
 	$(toAppend).append(devBox);
-	
+
 	$('.'+key).data('hashrate', hash);
 
 	$('.'+key).knob({
@@ -401,10 +401,10 @@ function createMon(key, hash, totalhash, maxHashrate, ac, re, hw, sh, freq, colo
         'ticks': 16,
         'width':size,
         'height':size,
-		'draw' : function () { 
+		'draw' : function () {
 			// 'tron' case
             if (this.o.skin === 'tron') {
-				
+
                 var a = this.angle(this.cv),  // Angle
                 	sa = this.startAngle,          // Previous start angle
                     sat = this.startAngle,         // Start angle
@@ -442,15 +442,15 @@ function createMon(key, hash, totalhash, maxHashrate, ac, re, hw, sh, freq, colo
             else
             {
 				this.i.val(convertHashrate(this.cv));
-            }		
+            }
 		}
 	});
-	
+
 	if (key === 'total')
 		max = totalhash;
 	else
 		max = maxHashrate;
-	
+
 	$('.'+key)
 	    .trigger(
 	        'configure',
@@ -460,20 +460,20 @@ function createMon(key, hash, totalhash, maxHashrate, ac, re, hw, sh, freq, colo
 	        'step':1,
 	        }
 	    );
-	    
+
 	$({value: 0}).animate({value: hash}, {
 	    duration: 1000,
 	    easing:'swing',
-	    step: function() 
+	    step: function()
 	    {
 		        $('.'+key).val(Math.ceil(this.value)).trigger('change');
 	    }
 	});
-	    
+
 	$('.'+key).css('font-size', fontsize);
 }
 
-function changeEarnings(value) 
+function changeEarnings(value)
 {
 
 	var hashrate = $('.widget-total-hashrate').data('pool-hashrate');
@@ -481,7 +481,7 @@ function changeEarnings(value)
 	var amount = (value * hashrate / 1000);
 
 	$('.profitability-results').html('<span class="label bg-blue">' + convertHashrate(hashrate) + '</span>&nbsp;x&nbsp;<span class="label bg-green">' + value.toFixed(5) + '</span> = <small>Day: </small><span class="badge bg-red">' + amount.toFixed(8) + '</span> <small>Week: </small><span class="badge bg-light">' + (amount * 7).toFixed(8) + '</span> <small>Month: </small><span class="badge bg-light">' + (amount * 30).toFixed(8) + '</span>');
-	
+
 }
 
 // Errors
@@ -493,9 +493,9 @@ function triggerError(msg)
 	$('.right-section').hide();
 	$('.left-section').hide();
 	$('.messages-avg').hide();
-	$('.warning-message').html(msg);                        
+	$('.warning-message').html(msg);
 	$('.warning-section').fadeIn();
-	
+
 	return false;
 }
 
@@ -503,7 +503,7 @@ Number.prototype.noExponents= function()
 {
 
     var data= String(this).split(/[eE]/);
-    if(data.length === 1) return data[0]; 
+    if(data.length === 1) return data[0];
 
     var  z= '', sign= this<0? '-':'',
     str= data[0].replace('.', ''),
@@ -514,7 +514,7 @@ Number.prototype.noExponents= function()
         while(mag++) z += '0';
         return z + str.replace(/^\-/,'');
     }
-    mag -= str.length;  
+    mag -= str.length;
     while(mag--) z += '0';
     return str + z;
 };
@@ -524,9 +524,9 @@ Number.prototype.noExponents= function()
 */
 $(function() {
 
-	
+
 	var thisSection = $('.header').data('this-section');
-	
+
 	/*
 	if (thisSection === 'settings') {
 		jQuery.ajax({
@@ -538,13 +538,13 @@ $(function() {
 		});
 	}
 	*/
-	
+
 	$('body').tooltip({ selector: '[data-toggle="tooltip"]', trigger: 'hover' });
 	$('body').popover({ selector: '[data-toggle="popover"]', trigger: 'hover' });
-	
+
 	var timeNow = new Date().getTime(), promoInterval = 3600000, theInterval = null, adsFree = $('.app_data').data('ads-free');
-	
-	if (!adsFree) {			
+
+	if (!adsFree) {
 		var setPromoInterval = function () {
 			if (theInterval) {
 				//console.log('Clear');
@@ -555,7 +555,7 @@ $(function() {
 				//console.log('Set');
 				Cookies.set('timestamp', new Date().getTime()+promoInterval);
 			}
-			
+
 			if (!Cookies.get('promoModal')) {
 				theInterval = setInterval(function () {
 					//console.log('Start');
@@ -573,7 +573,7 @@ $(function() {
 		} else {
 			setPromoInterval();
 		}
-		
+
 		$('.modal-promo-hide').click(function(e){
 	       	e.preventDefault();
 			$('#modal-promo').modal('hide');
@@ -581,7 +581,7 @@ $(function() {
 			Cookies.remove('promoModal');
 	  		setPromoInterval();
 		});
-		
+
 		/*
 		var overiFrame = -1;
 	    $('.promo-iframe').hover( function() {
@@ -609,7 +609,7 @@ $(function() {
 	$('.open-browser-mining-info').on('click', function () {
 		$('.browser-mining-info-box').toggle();
 	});
-	
+
 	// Scroll ad
 	if (thisSection !== 'lockscreen') {
 	    if ($(document).scrollTop() > 64) {
@@ -624,12 +624,12 @@ $(function() {
 			}
 		});
 	}
-	
+
 	// Add responsive class to datatables
 	$('.responsive-datatable-minera').on('DOMChanged', function () {
 		$(this).parent().addClass('table-responsive');
 	});
-	
+
 	// Smmoth scroll
 	$('a[href*=#]:not([href=#])').click(function() {
 	    if (location.pathname.replace(/^\//,'') === this.pathname.replace(/^\//,'') && location.hostname === this.hostname) {
@@ -643,7 +643,7 @@ $(function() {
 			}
 		}
 	});
-	
+
 	function startTime()
     {
         var today = new Date();
@@ -676,7 +676,7 @@ $(function() {
         }
         return i;
     }
-    
+
 	startTime();
 
 	var mineraId = $('.app_data').data('minera-id');
@@ -759,16 +759,16 @@ $(function() {
 			miner.stop();
 		}
 	}
-    
+
     $('.miner-action').click(function(e) {
        	e.preventDefault();
        	var action =  $(this).data('miner-action');
-    	
+
 	   	$('#modal-saving-label').html('Sending action: '+action+' , please wait...');
     	$('#modal-saving').modal('show');
-    	
+
     	saveSettings(false, false);
-    	
+
     	var apiUrl = _baseUrl+'/app/api?command=miner_action&action='+action;
 
 		$.ajax({
@@ -783,14 +783,14 @@ $(function() {
 			}
 		});
     });
-    
+
     $('.reset-action').click(function(e) {
        	e.preventDefault();
        	var action =  $(this).data('reset-action');
-    	
+
 	   	$('#modal-saving-label').html('Resetting: '+action+' , please wait...');
     	$('#modal-saving').modal('show');
-    	
+
     	var apiUrl = _baseUrl+'/app/api?command=reset_action&action='+action;
 
 		$.ajax({
@@ -803,13 +803,13 @@ $(function() {
 			}
 		});
     });
-    
+
     $('.reset-factory-action').click(function(e) {
        	e.preventDefault();
-    	
+
 	   	$('#modal-saving-label').html('Resetting Minera please wait...');
     	$('#modal-saving').modal('show');
-    	
+
     	var apiUrl = _baseUrl+'/app/api?command=factory_reset_action';
 
 		$.ajax({
@@ -817,17 +817,17 @@ $(function() {
 			url: apiUrl,
 			cache: false,
 			success:  function(resp){
-				setTimeout(function () { 
+				setTimeout(function () {
 					$('#modal-saving').modal('hide');
 					window.location.reload();
 				}, 1500);
 			}
 		});
     });
-    
+
 	$('.system-open-terminal').click(function(e){
        	e.preventDefault();
-       	
+
        	var a = document.createElement('a');
        	a.href = _baseUrl;
 
@@ -860,26 +860,26 @@ $(function() {
 			}
 		});
     });
-	
+
 	$('.modal-hide').click(function(e){
        	e.preventDefault();
 		$('#modal-terminal').modal('hide');
 	});
-	
+
 	if (thisSection === 'charts') {
-	    
+
 		// Chart Scripts
-		createChart('hourly', '5 minutes');		    
+		createChart('hourly', '5 minutes');
 		createChart('daily', '15 minutes');
 		createChart('monthly', '1 hour');
 		createChart('yearly', '1 day');
 
 	} else if (thisSection === 'lockscreen') {
-		
+
     	$('.pass-form').trigger('focus');
         startTime();
         $('.copyright').addClass('copyright-lockscreen');
-        
+
         if ($('body').data('timer')) { timer(); }
 
         /* CENTER ELEMENTS IN THE SCREEN */
@@ -896,12 +896,12 @@ $(function() {
                     $(window).scrollLeft()) + 'px');
             return this;
         }*/
-		
+
 	} else if (thisSection === 'settings') {
 
 		// Settings Scripts
 		$('.box-tools').click( function(e) { e.preventDefault(); });
-		
+
 		if ($(document).scrollTop() > 64) {
 			$('.save-toolbox').fadeIn();
 		}
@@ -913,9 +913,9 @@ $(function() {
 				$('.save-toolbox').fadeOut();
 			}
 		});
-		
-		$('.toggle-save-toolbox').click( function(e) { 
-			e.preventDefault(); 
+
+		$('.toggle-save-toolbox').click( function(e) {
+			e.preventDefault();
 			var nextIcon = $(this).find('.fa');
 			if (nextIcon.hasClass('fa-close')) {
 				nextIcon.addClass('fa-arrow-left');
@@ -927,16 +927,16 @@ $(function() {
 				$('.save-toolbox').css('right', '0');
 			}
 		});
-    
+
 	    if (window.location.href.match(/settings/g))
 	    {
 		    $('.treeview-menu-settings-icon').removeClass('fa-angle-left').addClass('fa-angle-down');
 		    $('.treeview-menu-settings-icon').parent('a').first().addClass('activeTree');
 			$('.treeview-menu-settings').fadeIn();
 	    }
-	    
+
 	    $('#progress').hide();
-	    
+
 	    $('.save-minera-settings').click(function(e) {
 	       	e.preventDefault();
 	       	saveSettings(true, false);
@@ -949,7 +949,7 @@ $(function() {
 			$('#minersettings').append($(input));
 	       	saveSettings(true, false);
 	    });
-		
+
 		$('.import-file').fileupload({
 			url: _baseUrl+'/app/api?command=import_file',
 			dataType: 'json',
@@ -974,15 +974,15 @@ $(function() {
 				);
 			}
 		}).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
-	    
+
 	    $(document).on('click', '.import-file-action', function(e) {
 	       	e.preventDefault();
-	       	
+
 	       	$('#modal-saving-label').html('Cloning the system, please wait...');
 	    	$('#modal-saving').modal('show');
-	    	
+
 	    	var saveUrl = _baseUrl+'/app/api?command=clone_system';
-	
+
 			$.ajax({
 				type: 'GET',
 				url: saveUrl,
@@ -993,16 +993,16 @@ $(function() {
 				}
 			});
 		});
-		
+
 		$('.export-action').click(function(e) {
 	       	e.preventDefault();
-	    	
+
 		   	$('#modal-saving-label').html('Generating export file, please wait...');
 	    	$('#modal-saving').modal('show');
-	    	
+
 	    	var saveUrl = _baseUrl+'/app/save_settings';
 	    	var formData = $('#minersettings').serialize();
-	
+
 			$.ajax({
 				type: 'POST',
 				url: saveUrl,
@@ -1012,18 +1012,18 @@ $(function() {
 					$('#modal-saving').modal('hide');
 					window.location = _baseUrl+'/app/export';
 				}
-			});      	
+			});
 	    });
-	    
+
 	    $('.save-config-action').click(function(e) {
 	       	e.preventDefault();
-	    	
+
 		   	$('#modal-saving-label').html('Saving current config, please wait...');
 	    	$('#modal-saving').modal('show');
-	    	
+
 	    	var saveUrl = _baseUrl+'/app/save_settings?save_config=1';
 	    	var formData = $('#minersettings').serialize();
-	
+
 			$.ajax({
 				type: 'POST',
 				url: saveUrl,
@@ -1031,12 +1031,12 @@ $(function() {
 				cache: false,
 				success:  function(resp){
 					var date = moment(resp.timestamp*1000);
-	
+
 					var pools = '';
-					for (var key in resp.pools) { 
+					for (var key in resp.pools) {
 						pools += resp.pools[key].url + ' <i class="fa fa-angle-double-right"></i> ' + resp.pools[key].username + '<br />';
 					}
-					
+
 					var htmlRow =
 						'<tr class="config-'+resp.timestamp+'">' +
 							'<td><small class="label label-info">'+date.format('MM/DD/YY h:mm a')+'</small></td>' +
@@ -1048,38 +1048,38 @@ $(function() {
 								'<a href="#" class="load-config-action" style="margin-left:10px;" data-config-id="'+resp.timestamp+'" data-toggle="tooltip" data-title="Load saved config"><i class="fa fa-upload"></i></a>' +
 								'<a href="#" class="delete-config-action" style="margin-left:10px;" data-config-id="'+resp.timestamp+'" data-toggle="tooltip" data-title="Delete saved config"><i class="fa fa-times"></i></a>' +
 							'</td>' +
-						'</tr>'; 
-							
+						'</tr>';
+
 					$('#saved-configs-table tbody').append(htmlRow);
-					
+
 					$('.saved-configs').show();
 					$('#modal-saving').modal('hide');
 				}
-			});      	
+			});
 	    });
-	    
+
 	    $(document).on('click', '.share-config-open', function(e) {
 	       	e.preventDefault();
 	    	$('input[name="config_id"]').val($(this).data('config-id'));
 	    	$('#modal-sharing').modal('show');
 	    });
-	    
+
 	    $(document).on('click', '.share-config-action', function(e) {
 	       	e.preventDefault();
-	    	
+
 	    	$('.share-error').fadeOut();
-	    	
+
 	    	var descr = $('textarea[name="config_description"]').val();
-	
+
 	    	if (!descr || 0 === descr.length)
 	    	{
 	        	$('#formsharingconfig').append('<h6 class="callout bg-red share-error">Description can\'t be empty');
 	        	return;
 	    	}
-	    	
+
 	    	var saveUrl = _baseUrl+'/app/api/?command=share_config';
 	    	var formData = $('#formsharingconfig').serialize();
-	    	
+
 			$.ajax({
 				type: 'POST',
 				url: saveUrl,
@@ -1092,15 +1092,15 @@ $(function() {
 				}
 			});
 	    });
-	
+
 	    $(document).on('click', '.delete-config-action', function(e) {
 	       	e.preventDefault();
-	    	
+
 	    	var id = $(this).data('config-id');
 	    	var saveUrl = _baseUrl+'/app/api/?command=delete_config&id='+id;
-	
+
 			$('.config-'+id).fadeOut();
-	
+
 			$.ajax({
 				type: 'GET',
 				url: saveUrl,
@@ -1109,20 +1109,20 @@ $(function() {
 					//console.log(resp);
 					$('.config-'+id).remove();
 				}
-			});      	
+			});
 	    });
-	    
+
 	    $(document).on('click', '.load-config-action', function(e) {
 	       	e.preventDefault();
-	    	
+
 	    	$('#modal-saving-label').html('Loading config, please wait...');
 			$('#modal-saving').modal('show');
-		
+
 	    	var id = $(this).data('config-id');
 	    	var saveUrl = _baseUrl+'/app/api/?command=load_config&id='+id;
-	
+
 			$('.config-'+id).fadeOut('fast').fadeIn('slow');
-	
+
 			$.ajax({
 				type: 'GET',
 				url: saveUrl,
@@ -1131,18 +1131,18 @@ $(function() {
 					$('#modal-saving').modal('hide');
 					window.location.reload();
 				}
-			});      	
+			});
 	    });
-	    
+
 	    // Network miners
 	    $(document).on('click', '.scan-network', function(e) {
 	       	e.preventDefault();
-	       	
+
 	       	$('#modal-saving-label').html('Scanning the network, please wait...');
 	    	$('#modal-saving').modal('show');
-	    	
+
 	    	var scanUrl = _baseUrl+'/app/api?command=scan_network';
-	
+
 			$.ajax({
 				type: 'GET',
 				url: scanUrl,
@@ -1154,7 +1154,7 @@ $(function() {
 					{
 						$('.net-group-master').first().clone().prependTo('.netSortable');
 						$('.net-group-master').first().css('display', 'block').removeClass('net-group-master');
-	
+
 						$.each(resp, function (index, value)
 						{
 							$('.net-group:first .net-row .net_miner_status').html('<i class="fa fa-circle text-success"></i> Online');
@@ -1163,7 +1163,7 @@ $(function() {
 							$('.net-group:first .net-row .net_miner_port').val('4028');
 							$('.net-group:first .net-row .net_miner_status').removeClass('label-primary').addClass('label-success');
 						});
-						
+
 						setTimeout(function () { saveSettings(true, true); }, 2000);
 					} else {
 						$('.alert-no-net-devices').fadeIn();
@@ -1172,23 +1172,23 @@ $(function() {
 				}
 			});
 		});
-	
+
 		$(document).on('click', '.net_miner_status', function(e) {
 			e.preventDefault();
 	    });
-		
+
 		$(document).on('click', '.del-net-row', function(e) {
 			e.preventDefault();
 			$(this).closest('.form-group').remove();
 			saveSettings(false, true);
 	    });
-	    		    
+
 	    $(document).on('click', '.add-net-row', function(e) {
 			e.preventDefault();
 			$('.net-group-master').first().clone().appendTo('.netSortable');
 			$('.net-group-master').last().css('display', 'block').removeClass('net-group-master');
 	    });
-		
+
 		$('.netSortable').sortable({
 	        placeholder: 'sort-highlight',
 	        connectWith: '.sort-attach',
@@ -1197,7 +1197,7 @@ $(function() {
 	        zIndex: 999999
 	    });
 	    $('.sort-attach').css('cursor','move');
-	    
+
 	    //Make the dashboard widgets sortable Using jquery UI
 	    $('.poolSortable').sortable({
 	        placeholder: 'sort-highlight',
@@ -1207,25 +1207,25 @@ $(function() {
 	        zIndex: 999999
 	    });
 	    $('.sort-attach').css('cursor','move');
-	    
+
 	    // Initialize options sliders
 	    $('.open-readme-donation').click(function(e) {
 			e.preventDefault();
 			$('.readme-donation').fadeToggle();
 	    });
-	    
+
 	    $('.view-stored-donations').click(function(e) {
 			e.preventDefault();
 			$('#stored-donation-table_wrapper').toggle();
 			$('#stored-donation-table').fadeToggle();
 	    });
-	    
+
 		$('#stored-donation-table').dataTable({bFilter: false, bInfo: false, bPaginate: true, 'dom': '<"top"i>rt<"bottom"flp><"clear">'});
 		$('#stored-donation-table_wrapper').hide();
-	    	    
+
 	    var donationProfitability = $('#option-minera-donation-time').data('donation-profitability'),
 	    	savedDonationTime = $('#option-minera-donation-time').data('saved-donation-time');
-	    
+
 	    $('#option-minera-donation-time').ionRangeSlider({
 			min: 0,
 			max: 360,
@@ -1245,7 +1245,7 @@ $(function() {
 				changeDonationWorth(donationProfitability, obj.from);
 			}
 		});
-		
+
 	    $('#ion-startfreq').ionRangeSlider({
 			min: 600,
 			max: 1400,
@@ -1255,7 +1255,7 @@ $(function() {
 			postfix: ' Mhz',
 			grid: true,
 		});
-	
+
 	    $('#option-dashboard-refresh-time').ionRangeSlider({
 			min: 0,
 			max: 600,
@@ -1275,17 +1275,17 @@ $(function() {
 				}
 			}
 		});
-		
+
 	    $(document).on('click', '.help-pool-row', function(e) {
 			e.preventDefault();
 			$('.minera-pool-help').fadeToggle();
 	    });
-	
+
 	    $(document).on('click', '.del-pool-row', function(e) {
 			e.preventDefault();
 			$(this).closest('.form-group').remove();
 	    });
-	    		    
+
 	    $(document).on('click', '.add-pool-row', function(e) {
 			e.preventDefault();
 			if ($(this).data('network')) {
@@ -1296,9 +1296,9 @@ $(function() {
 				$('.pool-group-master').last().css('display', 'block').removeClass('pool-group-master');
 			}
 	    });
-	
+
 		$('.form-donation').prop('disabled', true);
-		
+
 	    $(document).on('click', '.add-donation-pool-row', function(e) {
 			e.preventDefault();
 			if ($(this).data('network')) {
@@ -1308,23 +1308,23 @@ $(function() {
 				$('.form-donation').prop('readonly', true).prop('disabled', false);
 				$('.pool-donation-group').css('display', 'block').removeClass('pool-donation-group');
 			}
-			
+
 			$(this).fadeOut();
 	    });
-	    
+
 	    // Custom miners
 	     // Initialize options sliders
 	    $('.open-readme-custom-miners').click(function(e) {
 			e.preventDefault();
 			$('.readme-custom-miners').fadeToggle();
 	    });
-	    
+
 	    $('#minerd-software').on('change', function() {
 			showHideMinerOptions(true);
 			$('#miners-conf').val('');
 			$('.miners-conf-box').fadeOut();
 	    });
-	    
+
 	    $('#miners-conf').on('change', function() {
 		    $('#minerd-software').val($(this).find(':selected').data('miner-id'));
 			$('.miners-conf-box').html('<code>'+$(this).val()+'</code>').fadeIn();
@@ -1337,11 +1337,11 @@ $(function() {
 			$('#guided_options').val(0);
 			$('.manual-settings').val($(this).val());
 	    });
-	    
+
 	    $(document).on('click', '.del-custom-miner', function(e) {
 			e.preventDefault();
 			var d = $(this).closest('.input-group');
-			
+
 			$.ajax(_baseUrl+'/app/api?command=delete_custom_miner&custom='+$(this).data('custom-miner'), {
 		        success: function (data) {
 		        	if (data)
@@ -1352,9 +1352,9 @@ $(function() {
 		        }
 		    });
 	    });
-	    
+
 	    showHideMinerOptions(false);
-	    	    
+
 	    if ($('#manual_options').val() === '1') { $('.guided-options').hide(); }
 	    if ($('#guided_options').val() === '1') { $('.manual-options').hide(); }
 	    $('.btn-manual-options').click(function() {
@@ -1375,32 +1375,32 @@ $(function() {
 			$('#guided_options').val(1);
 			return false;
 	    });
-		
+
 	    // validate signup form on keyup and submit
 	    $.validator.addMethod('check_multiple_select', function(value, element) {
 			if (value && value.length > 0 && value.length <= 5 ) {
 				return true;
 			}
-				
+
 			return false;
-			
+
 		}, 'Select at least 1 rate (max 5)');
-		
+
 	    $.validator.addMethod('no_quote', function(value, element) {
 			if (!value.match(/\'/) ) {
 				return true;
 			}
-				
+
 			return false;
-			
+
 		}, 'You can use any symbol but single quote');
-		
+
 		jQuery.validator.addMethod('validIP', function(value) {
 		    var split = value.split('.');
 		    if (split.length !== 4) {
 		        return false;
 		    }
-		            
+
 		    for (var i=0; i<split.length; i++) {
 		        var s = split[i];
 		        if (s.length === 0 || isNaN(s) || s<0 || s>255) {
@@ -1409,7 +1409,7 @@ $(function() {
 		    }
 		    return true;
 		}, ' Invalid IP Address');
-	
+
 		var validator = $('#minersettings').validate({
 			rules: {
 				minerd_manual_settings: 'required',
@@ -1474,13 +1474,13 @@ $(function() {
 		    	$(element).closest('.input-group').removeClass('has-success').addClass('has-error');
 		    }
 		});
-		
+
 		if ($('.dashboard-coin-rates').length) {
 			$('.dashboard-coin-rates').rules('add', {
 				check_multiple_select: true
 			});
 		}
-		
+
 		$('.pool_url').each(function () {
 			if ($(this).data('ismain'))
 			{
@@ -1497,7 +1497,7 @@ $(function() {
 				});
 			}
 		});
-		
+
 		$('.pool_username').each(function () {
 			if ($(this).data('ismain'))
 			{
@@ -1514,7 +1514,7 @@ $(function() {
 				});
 			}
 		});
-		
+
 		$('.pool_password').each(function () {
 			if ($(this).data('ismain'))
 			{
@@ -1531,7 +1531,7 @@ $(function() {
 				});
 			}
 		});
-		
+
 		$('.net_miner_name').each(function () {
 			$(this).rules('add', {
 				required: {
@@ -1562,7 +1562,7 @@ $(function() {
 			});
 		});
 	} else if (thisSection === 'dashboard') {
-		
+
 		// Dashboard Scripts
 	    if (window.location.href.match(/dashboard/g))
 	    {
@@ -1570,18 +1570,18 @@ $(function() {
 		    $('.treeview-menu-dashboard-icon').parent('a').first().addClass('activeTree');
 			$('.treeview-menu-dashboard').fadeIn();
 	    }
-		
+
 		// Refresh stats when you come back in Minera tab
 		window.onblur= function() { window.onfocus= function () { getStats(true); target_date = new Date().getTime(); }; };
-		
+
 		var refresh_time = $('.app_data').data('refresh-time');
-		
+
 		// set the date we're counting down to
 		var target_date = new Date().getTime();
-		 
+
 		// variables for time units
 		var days, hours, minutes, seconds;
-		
+
 		// update the tag with id 'countdown' every 1 second
 		setInterval(function () {
 		    // find the amount of 'seconds' between now and target
@@ -1593,26 +1593,26 @@ $(function() {
 			    // do some time calculations
 				minutes = parseInt(seconds_left / 60);
 				seconds = parseInt(seconds_left % 60);
-		     
+
 				// format countdown string + set tag value
-				$('.auto-refresh-time').html(minutes + 'm : ' + seconds + 's ');	
+				$('.auto-refresh-time').html(minutes + 'm : ' + seconds + 's ');
 			}
 			else
 			{
 				target_date = new Date().getTime();
 				getStats(true);
 			}
-		 
+
 		}, 1000);
-			
+
 		// Refresh button
 		$(document).on('click', '.refresh-btn', function(e) { e.preventDefault(); getStats(true); target_date = new Date().getTime(); });
-		
+
 		// Save frequency table button
 		$('.btn-saved-freq').click( function() {
 			$('.freq-box').fadeToggle();
 		});
-		
+
 		$('.save-freq').click( function() {
 			$('.freq-box').fadeOut();
 			$.ajax(_baseUrl+'/app/api?command=save_current_freq', {
@@ -1626,11 +1626,11 @@ $(function() {
 		        }
 		    });
 		});
-		
+
 		// Raw stats click
 		$('.view-raw-stats').click( function() { $('.section-raw-stats').fadeIn(); });
 		$('.close-stats').click( function() { $('.section-raw-stats').fadeOut(); });
-		
+
 		//Make the dashboard widgets sortable Using jquery UI
 		$('.connectedSortable').sortable({
 		    placeholder: 'sort-highlight',
@@ -1640,19 +1640,19 @@ $(function() {
 		    zIndex: 999999
 		});
 		$('.box-header, .nav-tabs').css('cursor','move');
-		    
+
 		/*
 		// Start logviewer
 		*/
 		var dataelem = '#real-time-log-data';
 		var pausetoggle = '#pause';
 		var scrollelems = ['.real-time-log-data'];
-		
+
 		var log_url = $('.app_data').data('minerd-log');
 		var fix_rn = true;
 		var load_log = 1 * 1024; /* 30KB */
 		var poll = 1000; /* 1s */
-		
+
 		var kill = false;
 		var loading = false;
 
@@ -1660,12 +1660,12 @@ $(function() {
 		var log_data = '';
 		var log_size = 0;
 		var pause_log = false;
-		
+
 		// Logs
 		var get_log = function() {
 		    if (kill | loading) return;
 		    loading = true;
-		
+
 		    var range;
 		    if (log_size === 0)
 		        /* Get the last 'load' bytes */
@@ -1673,41 +1673,41 @@ $(function() {
 		    else
 		        /* Get the (log_size - 1)th byte, onwards. */
 		        range = (log_size - 1).toString() + '-';
-		
+
 		    /* The 'log_size - 1' deliberately reloads the last byte, which we already
 		     * have. This is to prevent a 416 'Range unsatisfiable' error: a response
 		     * of length 1 tells us that the file hasn't changed yet. A 416 shows that
 		     * the file has been trucnated */
-		
+
 		    $.ajax(log_url, {
 		        dataType: 'text',
 		        cache: false,
 		        headers: {Range: 'bytes=' + range},
 		        success: function (data, s, xhr) {
 		            loading = false;
-		
+
 		            var size;
-		
+
 		            if (xhr.status === 206) {
 		                //if (data.length > load_log)
 		                    //throw 'Expected 206 Partial Content';
-		
+
 		                var c_r = xhr.getResponseHeader('Content-Range');
 		                if (!c_r)
 		                    throw 'Server did not respond with a Content-Range';
-		
+
 		                size = parseInt(c_r.split('/')[1]);
 		                if (isNaN(size))
 		                    throw 'Invalid Content-Range size';
 		            } else if (xhr.status === 200) {
 		                if (log_size > 1)
 		                    throw 'Expected 206 Partial Content';
-		
+
 		                size = data.length;
 		            }
-		
+
 		            var added = false, start = 0;
-		
+
 		            if (log_size === 0) {
 		                /* Clip leading part-line if not the whole file */
 		                if (data.length < size) {
@@ -1716,21 +1716,21 @@ $(function() {
 		                } else {
 		                    log_data = data;
 		                }
-		
+
 		                added = true;
 		            } else {
 		                /* Drop the first byte (see above) */
 		                log_data += data.substring(1);
-		
+
 		                if (log_data.length > load_log) {
 		                    start = log_data.indexOf('\n', log_data.length - load_log);
 		                    log_data = log_data.substring(start + 1);
 		                }
-		
+
 		                if (data.length > 1)
 		                    added = true;
 		            }
-		
+
 		            log_size = size;
 		            if (added)
 		                show_log(added);
@@ -1738,15 +1738,15 @@ $(function() {
 		        },
 		        error: function (xhr, s, t) {
 		            loading = false;
-		
+
 		            if (xhr.status === 416 || xhr.status === 404) {
 		                /* 416: Requested range not satisfiable: log was truncated. */
 		                /* 404: Retry soon, I guess */
-		
+
 		                log_size = 0;
 		                log_data = '';
 		                show_log();
-		
+
 		                setTimeout(get_log, poll);
 		            } else {
 		                if (s === 'error')
@@ -1757,7 +1757,7 @@ $(function() {
 		        }
 		    });
 		};
-		
+
 		var scroll_log = function(where) {
 		    for (var i = 0; i < scrollelems.length; i++) {
 		        var s = $(scrollelems[i]);
@@ -1767,28 +1767,28 @@ $(function() {
 		            s.scrollTop(where);
 		    }
 		};
-		
+
 		var show_log = function() {
 		    if (pause_log) return;
-		
+
 		    var t = log_data;
-		
+
 		    if (reverse) {
 		        var t_a = t.split(/\n/g);
 		        t_a.reverse();
-		        if (t_a[0] === '') 
+		        if (t_a[0] === '')
 		            t_a.shift();
 		        t = t_a.join('\n');
 		    }
-		
+
 		    if (fix_rn)
 		        t = t.replace(/\n/g, '\r\n');
-		
+
 		    $(dataelem).text(t);
 		    if (!reverse)
 		        scroll_log(-1);
 		};
-					
+
 		/* Add pause toggle */
 		$('.pause-log').click(function (e) {
 			pause_log = !pause_log;
@@ -1802,25 +1802,25 @@ $(function() {
 			{
 				kill = false;
 				get_log();
-				$(this).html('<i class="fa fa-pause"></i>');	
+				$(this).html('<i class="fa fa-pause"></i>');
 				$(this).attr('data-original-title', 'Pause log');
 			}
 			show_log();
 			e.preventDefault();
 		});
-		
+
 		get_log();
 		$('.pause-log').click();
-		
+
 		/*
 		// End logviewer
 		*/
-			
+
 		$('.profitability-question').click(function(e) {
 			e.preventDefault();
 			$('.profitability-help').fadeToggle();
 		});
-		
+
 		$('#profitability-slider').ionRangeSlider({
 			min: 0,
 			max: 0.001,
@@ -1832,9 +1832,9 @@ $(function() {
 			onChange: function (obj) {
 				changeEarnings(obj.from);
 			}
-		});	
+		});
 	}
-    
+
 });
 
 // ****************************** //
@@ -2002,12 +2002,12 @@ $(document).on('click', '.select-pool', function(e) {
         	if (dataP)
         	{
         		var dataJ = $.parseJSON(dataP);
-        		
+
     			getStats(true);
     			if (dataJ)
     			{
     				$('.pool-alert').html('CG/BFGminer could take some minutes to complete the switching process, try to <a href="#" class="refresh-btn">refresh the dashboard</a>.. <pre style="font-size:10px;margin-top:10px;">'+dataP+'</pre>').fadeIn();
-    				
+
     				setTimeout(function() {
 						$('.pool-alert').html('');
 	    			}, 30000);
@@ -2104,10 +2104,10 @@ $(document).on('click', '.remove-pool', function(e) {
 $(document).on('click', '.cron-unlock', function(e) {
 
    	e.preventDefault();
-	
+
    	$('#modal-saving-label').html('Unlocking cron...');
 	$('#modal-saving').modal('show');
-	
+
 	var apiUrl = _baseUrl+'/app/api?command=cron_unlock';
 
 	$.ajax({
@@ -2146,17 +2146,17 @@ function getStats(refresh)
 		// Raw stats
 		boxStats = $('.section-raw-stats'),
 		thisSection = $('.header').data('this-section');
-		
+
 	boxStats.hide();
-	
+
 	$('.overlay').show();
 	$('.refresh-icon').addClass('fa-spin');
 	// Show loaders
 	//$('.loading-img').show();
-	
-	/* Knob, Table, Sysload */		
+
+	/* Knob, Table, Sysload */
 	// get Json data from minerd and create Knob, table and sysload
-    $.getJSON( _baseUrl+'/app/stats', function( data ) 
+    $.getJSON( _baseUrl+'/app/stats', function( data )
     {
     	// console.log(data);
 		if (data.notloggedin)
@@ -2174,7 +2174,7 @@ function getStats(refresh)
 			var startdate = new Date(data.start_time*1000);
 
 			$('body').data('stats-loop', 0);
-			
+
 			if (data.notrunning)
 			{
 				$('.disable-if-not-running').fadeOut();
@@ -2196,7 +2196,7 @@ function getStats(refresh)
 				    		}
 				        }
 				    });
-				    
+
 				    $('.warning-message').click(function (e) {
 					    e.preventDefault();
 						$('#modal-log').modal('show');
@@ -2225,75 +2225,75 @@ function getStats(refresh)
 			    		}
 			        }
 			    });
-			    
+
 			    $('.warning-message').click(function (e) {
 				    e.preventDefault();
 					$('#modal-log').modal('show');
 			    });
 			}
-			
+
 			if (refresh)
 			{
 				// Destroy and clear the data tables before you can re-initialize it
 				if ( $.fn.dataTable.isDataTable('#miner-table-details') )
 				{
 					$('#miner-table-details').dataTable().fnClearTable();
-					$('#miner-table-details').dataTable().fnDestroy();							
+					$('#miner-table-details').dataTable().fnDestroy();
 				}
 				if ( $.fn.dataTable.isDataTable('#network-miner-table-details') )
 				{
 					$('#network-miner-table-details').dataTable().fnClearTable();
-					$('#network-miner-table-details').dataTable().fnDestroy();							
+					$('#network-miner-table-details').dataTable().fnDestroy();
 				}
 				if ( $.fn.dataTable.isDataTable('#pools-table-details') )
 				{
 					$('#pools-table-details').dataTable().fnClearTable();
-					$('#pools-table-details').dataTable().fnDestroy();	
+					$('#pools-table-details').dataTable().fnDestroy();
 				}
 				if ( $.fn.dataTable.isDataTable('#profit-table-details') )
 				{
 					$('#profit-table-details').dataTable().fnClearTable();
-					$('#profit-table-details').dataTable().fnDestroy();	
+					$('#profit-table-details').dataTable().fnDestroy();
 				}
 				$('.net-pools-table').each(function(key, obj) {
 					if ( $.fn.dataTable.isDataTable($(this)) )
 					{
 						$(this).dataTable().fnClearTable();
-						$(this).dataTable().fnDestroy();	
+						$(this).dataTable().fnDestroy();
 					}
 				});
 			}
-			
+
 			// Cron status
 			if (data.cron) {
 				$('.cron-status').fadeIn();
 			} else {
 				$('.cron-status').fadeOut();
 			}
-			
+
 			// Add raw stats box
 			boxStats.find('span').html('<pre style="height:350px; overflow: scroll; font-size:10px;">' + JSON.stringify(data, undefined, 2) + '</pre>');
-			
+
 			// Add BTC rates
 		    if (data.btc_rates) {
 			    var btcRatesData = {}; btcRatesData.btc_rates = data.btc_rates;
 		        $('.messages-btc-rates').html(btcRatesTemplate(btcRatesData));
 			}
-			
+
 			if (data.avg)
 			{
 				var avgStats = [], avgStatsData = {};
-				_.each( data.avg, function( aval, akey ) 
+				_.each( data.avg, function( aval, akey )
 				{
 					var avgs = {}; avgs.hrCurrentText = '-'; avgs.hrCurrent = 0; avgs.hrPast = 0;
 					if (aval[0])
 					{
 						avgs.hrCurrent = parseInt(aval[0].pool_hashrate / 1000);
-						avgs.hrCurrentText = convertHashrate( avgs.hrCurrent );								
+						avgs.hrCurrentText = convertHashrate( avgs.hrCurrent );
 					}
 					if (aval[1])
 					{
-						avgs.hrPast = parseInt(aval[1].pool_hashrate / 1000);				
+						avgs.hrPast = parseInt(aval[1].pool_hashrate / 1000);
 					}
 
 					if (avgs.hrPast > avgs.hrCurrent) {
@@ -2321,12 +2321,12 @@ function getStats(refresh)
 						});
 					}
 				});
-				
+
 				avgStatsData.avgs = avgStats;
 
 				$('.messages-avg').html(avgStatsTemplate(avgStatsData));
 			}
-			
+
 			$('.navbar .menu').slimscroll({
 		        height: '200px',
 		        alwaysVisible: false,
@@ -2337,7 +2337,7 @@ function getStats(refresh)
 			{
 				if ( !$.fn.dataTable.isDataTable('#pools-table-details') )
 				{
-					// Initialize the pools datatable	
+					// Initialize the pools datatable
 					$('#pools-table-details').dataTable({
 						'lengthMenu': [ 5, 10, 25, 50 ],
 						'pageLength': $('.app_data').data('records-per-page'),
@@ -2353,9 +2353,9 @@ function getStats(refresh)
 							//	nRow.className = 'bg-dark';
 							return nRow;
 						},
-						'aoColumnDefs': [ 
+						'aoColumnDefs': [
 						{
-							'aTargets': [ 5 ],	
+							'aTargets': [ 5 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -2365,7 +2365,7 @@ function getStats(refresh)
 							},
 						},
 						{
-							'aTargets': [ 7, 9, 11 ],	
+							'aTargets': [ 7, 9, 11 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -2377,16 +2377,16 @@ function getStats(refresh)
 						]
 					});
 
-				}	
-				
+				}
+
 				// Get main/active pool data
 				if (data.pool)
 				{
 					var poolhashrate = (data.pool.hashrate) ? data.pool.hashrate : 0;
 				}
-				
+
 				// Add pools data
-				$.each( data.pools, function( pkey, pval ) 
+				$.each( data.pools, function( pkey, pval )
 				{
 					var parser = document.createElement('a'),
 						picon = 'download',
@@ -2402,15 +2402,15 @@ function getStats(refresh)
 						purl = pval.url,
 						pshorturl = purl,
 						pool_shares = 0;
-					
+
 					parser.href = pval.url;
 
 					if (parser.hostname) {
 						pshorturl = parser.hostname;
 					} else {
-						pshorturl = pval.url.replace('stratum+tcp://', '').split(':')[0];	
+						pshorturl = pval.url.replace('stratum+tcp://', '').split(':')[0];
 					}
-					
+
 					if (pval.alive)
 					{
 						paliveclass = 'success';
@@ -2421,7 +2421,7 @@ function getStats(refresh)
 						paliveclass = 'danger';
 						palivelabel = 'Dead';
 					}
-					
+
 					puserlabel = 'blue';
 					purlicon = '<i class="fa fa-flash"></i>&nbsp;';
 					if (pval.user === $('.app_data').data('minera-pool-username'))
@@ -2432,7 +2432,7 @@ function getStats(refresh)
 
 					// Main pool
 					if (pval.active === true || pval.active === 1)
-					{	
+					{
 						pool_shares_seconds = parseFloat((now/1000)-pval.start_time);
 						pool_shares = pval.shares;
 						picon = 'upload';
@@ -2443,11 +2443,11 @@ function getStats(refresh)
 						pactivelab = 'Selected';
 						pshorturl = '<strong>'+pshorturl+'</strong>';
 					}
-					
+
 					var pstatsId = pval.stats_id;
 					var pshares = 0; var paccepted = 0; var prejected = 0; var psharesPrev = 0; var pacceptedPrev = 0; var prejectedPrev = 0; var phashData = {}; phashData.hash = 0; phashData.label = 'muted'; phashData.pstart_time = 'Never started';
 					// Get the pool stats
-					for (var p = 0; p < pval.stats.length; p++) 
+					for (var p = 0; p < pval.stats.length; p++)
 					{
 						var pstats = pval.stats[p];
 
@@ -2458,9 +2458,9 @@ function getStats(refresh)
 							pshares = pstats.shares;
 							paccepted = pstats.accepted;
 							prejected = pstats.rejected;
-							
+
 							// Calculate the real pool hashrate
-							if (pval.active === true || pval.active === 1) 
+							if (pval.active === true || pval.active === 1)
 							{
 								phashData.hash = parseInt(poolhashrate/1000); //parseInt((65536.0 * (pshares/(now/1000-pstats.start_time)))/1000);
 								phashData.label = 'red';
@@ -2501,19 +2501,19 @@ function getStats(refresh)
 							'<span class="badge bg-'+puserlabel+'">'+pval.user+'</span>'
 						] );
 					}
-					
+
 				});
 			}
 			else
 			{
 				$('#pools-table-details').html('<div class="alert alert-warning"><i class="fa fa-warning"></i><strong>No active pools</strong> data available.</div>');
 			}
-			
+
 			if (data.devices)
 			{
 				if ( !$.fn.dataTable.isDataTable('#miner-table-details') )
 				{
-					// Initialize the miner datatable	
+					// Initialize the miner datatable
 					$('#miner-table-details').dataTable({
 						'lengthMenu': [ 5, 10, 25, 50 ],
 						'pageLength': $('.app_data').data('records-per-page'),
@@ -2521,7 +2521,7 @@ function getStats(refresh)
 						'bAutoWidth': false,
 						'aoColumnDefs': [
 						{
-							'aTargets': [ 1 ],	
+							'aTargets': [ 1 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -2534,7 +2534,7 @@ function getStats(refresh)
 							},
 						},
 						{
-							'aTargets': [ 2 ],	
+							'aTargets': [ 2 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -2547,7 +2547,7 @@ function getStats(refresh)
 							},
 						},
 						{
-							'aTargets': [ 3 ],	
+							'aTargets': [ 3 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -2557,7 +2557,7 @@ function getStats(refresh)
 							}
 						},
 						{
-							'aTargets': [ 11 ],	
+							'aTargets': [ 11 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -2567,7 +2567,7 @@ function getStats(refresh)
 							}
 						},
 						{
-							'aTargets': [ 6, 8, 10 ],	
+							'aTargets': [ 6, 8, 10 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -2579,32 +2579,32 @@ function getStats(refresh)
 						],
 					});
 				}
-				
+
 				// Add per device stats
 				$.each( data.devices, function( key, val ) {
-										
+
 			    	// these are the single devices stats
 			    	var hashrate = Math.round(val.hashrate/1000);
-					
+
 			    	items[key] = { 'temp': val.temperature, 'serial': val.serial, 'hash': hashrate, 'ac': val.accepted, 're': val.rejected, 'hw': val.hw_errors, 'fr': val.frequency, 'sh': val.shares, 'ls': val.last_share };
 
 					hashrates.push(hashrate);
 
 			    });
-			    
+
 		    	var maxHashrate = Math.max.apply(Math, hashrates);
 
 				var avgFr = (data.totals.frequency) ? data.totals.frequency : 'n.a.';
 				var totTemp = (data.totals.temperature) ? data.totals.temperature : 'n.a.';
-				
+
 				totalhash = Math.round(data.totals.hashrate/1000);
 
 				// this is the global stats
 				items.total = { 'temp': totTemp, 'serial': '', 'hash': totalhash, 'ac': data.totals.accepted, 're': data.totals.rejected, 'hw': data.totals.hw_errors, 'fr': avgFr, 'sh': data.totals.shares, 'ls':  data.totals.last_share};
-				
-				for (var index in items) 
+
+				for (var index in items)
 				{
-									
+
 					// Add per device rows in system table
 					var devData = {}; devData.hash = items[index].hash;
 					var share_date = new Date(items[index].ls*1000);
@@ -2631,7 +2631,7 @@ function getStats(refresh)
 						devData.label = 'muted';
 					else
 						devData.label = 'green';
-												
+
 					var dev_serial = 'serial not available';
 					if (index !== 'total' && items[index].serial)
 					{
@@ -2646,13 +2646,13 @@ function getStats(refresh)
 						//Sidebar hashrate
 						//$('.sidebar-hashrate').html("@ "+convertHashrate(items[index].hash));
 					}
-					
+
 					var devRow = '<tr class="dev-'+index+'"><td class="devs_table_name"><i class="glyphicon glyphicon-hdd"></i>&nbsp;&nbsp;'+index+dev_serial+'</td><td class="devs_table_temp">'+ items[index].temp + '</td><td class="devs_table_freq">'+ items[index].fr + 'MHz</td><td class="devs_table_hash"><strong>'+ convertHashrate(items[index].hash) +'</strong></td><td class="devs_table_sh">'+ items[index].sh +'</td><td class="devs_table_ac">'+ items[index].ac +'</td><td><small class="text-muted">'+parseFloat(percentageAc).toFixed(2)+'%</small></td><td class="devs_table_re">'+ items[index].re +'</td><td><small class="text-muted">'+parseFloat(percentageRe).toFixed(2)+'%</small></td><td class="devs_table_hw">'+ items[index].hw +'</td><td><small class="text-muted">'+parseFloat(percentageHw).toFixed(2)+'%</small></td><td class="devs_table_ls">'+ parseInt(last_share_secs) +' secs ago</td><td><small class="text-muted">'+share_date.toUTCString()+'</small></td></tr>';
-				
+
 					if (index === 'total')
 					{
 						// TODO add row total via datatable
-					    $('.devs_table_foot').html(devRow);		
+					    $('.devs_table_foot').html(devRow);
 					}
 					else
 					{
@@ -2676,12 +2676,12 @@ function getStats(refresh)
 							] );
 						}
 					}
-					
+
 					if ($('.app_data').data('device-tree')) {
 						// Crete Knob graph for devices and total
 						createMon(index, items[index].hash, totalhash, maxHashrate, items[index].ac, items[index].re, items[index].hw, items[index].sh, items[index].fr, devData.label);
 					}
-					
+
 				}
 				$('[data-toggle="tooltip"]').tooltip();
 			}
@@ -2691,31 +2691,31 @@ function getStats(refresh)
 				$('#miner-table-details').html(nodevsMsg);
 				$('#devs').html(nodevsMsg).removeClass('row');
 			}
-			
+
 			//******************//
 			//					//
 			//  Network miners  //
 			//					//
 			//******************//
 			if (data.network_miners)
-			{				
+			{
 				$('.local-miners-title').show();
 				$('.network-miners-widget-section').show();
 				$('.network-miner-details').show();
-																		
+
 				var netHashrates = 0,
 					netPoolHashrates = 0,
 					networkMiners = [],
 					tLastShares = [],
 					tAc = 0, tRe = 0, tHw = 0, tSh = 0;
-					
+
 				//console.log(data.network_miners);
-				
+
 				if (Object.keys(data.network_miners).length > 0)
 				{
 					if ( !$.fn.dataTable.isDataTable('#network-miner-table-details') )
 					{
-						// Initialize the miner datatable	
+						// Initialize the miner datatable
 						$('#network-miner-table-details').dataTable({
 							'lengthMenu': [ 5, 10, 25, 50 ],
 							'pageLength': $('.app_data').data('records-per-page'),
@@ -2723,7 +2723,7 @@ function getStats(refresh)
 							'bAutoWidth': false,
 							'aoColumnDefs': [
 							{
-								'aTargets': [ 1 ],	
+								'aTargets': [ 1 ],
 								'mRender': function ( data, type, full ) {
 									if (type === 'display')
 									{
@@ -2736,7 +2736,7 @@ function getStats(refresh)
 								},
 							},
 							{
-								'aTargets': [ 2 ],	
+								'aTargets': [ 2 ],
 								'mRender': function ( data, type, full ) {
 									if (type === 'display')
 									{
@@ -2749,7 +2749,7 @@ function getStats(refresh)
 								},
 							},
 							{
-								'aTargets': [ 3 ],	
+								'aTargets': [ 3 ],
 								'mRender': function ( data, type, full ) {
 									if (type === 'display')
 									{
@@ -2759,7 +2759,7 @@ function getStats(refresh)
 								}
 							},
 							{
-								'aTargets': [ 11 ],	
+								'aTargets': [ 11 ],
 								'mRender': function ( data, type, full ) {
 									if (type === 'display')
 									{
@@ -2769,7 +2769,7 @@ function getStats(refresh)
 								}
 							},
 							{
-								'aTargets': [ 6, 8, 10 ],	
+								'aTargets': [ 6, 8, 10 ],
 								'mRender': function ( data, type, full ) {
 									if (type === 'display')
 									{
@@ -2783,45 +2783,45 @@ function getStats(refresh)
 					}
 
 					$.each(data.network_miners, function (netKey, networkMinerData) {
-						if (networkMinerData.devices) 
-						{	
+						if (networkMinerData.devices)
+						{
 							networkMiners[netKey] = networkMinerData.devices;
-							
+
 							// Add per network device stats
-							$.each( networkMinerData.devices, function( key, val ) {	
+							$.each( networkMinerData.devices, function( key, val ) {
 						    	// these are the single devices stats
 						    	var hashrate = Math.round(val.hashrate/1000);
-								
+
 						    	networkMiners[netKey][key] = { 'temp': val.temperature, 'serial': val.serial, 'hash': hashrate, 'ac': val.accepted, 're': val.rejected, 'hw': val.hw_errors, 'fr': val.frequency, 'sh': val.shares, 'ls': val.last_share };
-		
+
 								netHashrates += hashrate;
-								
+
 								tAc += val.accepted;
 								tRe += val.rejected;
 								tHw += val.hw_errors;
 								tSh += val.shares;
 								tLastShares.push(val.last_share);
-		
+
 								// this is the global stats
 								networkMiners.total = { 'ac': tAc, 're': tRe, 'hw': tHw, 'sh': tSh };
 						    });
-						    
-							
+
+
 							for (var index in networkMiners[netKey])
 							{
 								// Add per device rows in system table
 								var devData = {}; devData.hash = networkMiners[netKey][index].hash;
 								var share_date = new Date(networkMiners[netKey][index].ls*1000);
 								var rightnow = new Date().getTime();
-		
+
 								var last_share_secs = (networkMiners[netKey][index].ls > 0) ? (rightnow - share_date.getTime())/1000 : 0;
 								if (last_share_secs < 0) last_share_secs = 0;
-		
+
 								var totalWorkedShares = (networkMiners[netKey][index].ac+networkMiners[netKey][index].re+networkMiners[netKey][index].hw);
 								var percentageAc = (100*networkMiners[netKey][index].ac/totalWorkedShares);
 								var percentageRe = (100*networkMiners[netKey][index].re/totalWorkedShares);
 								var percentageHw = (100*networkMiners[netKey][index].hw/totalWorkedShares);
-		
+
 								// Add colored hashrates
 								if (last_share_secs >= 120 && last_share_secs < 240)
 									devData.label = 'yellow';
@@ -2831,7 +2831,7 @@ function getStats(refresh)
 									devData.label = 'muted';
 								else
 									devData.label = 'green';
-															
+
 								var dev_serial = 'serial not available';
 								if (networkMiners[netKey][index].serial)
 								{
@@ -2846,7 +2846,7 @@ function getStats(refresh)
 								//Sidebar hashrate
 								//$('.sidebar-hashrate').html('@ '+convertHashrate(items[index].hash));
 								*/
-								
+
 								if ( $.fn.dataTable.isDataTable('#network-miner-table-details') )
 								{
 									// New add rows via datatable
@@ -2866,8 +2866,8 @@ function getStats(refresh)
 										'<small class="text-muted">'+share_date.toUTCString()+'</small>'
 									] );
 								}
-							}								
-							
+							}
+
 							// Add network pools table
 							$('.net-pools-label-'+md5(netKey)).html('<h4><span class="label label-success" data-toggle="popover" data-title="'+netKey+'" data-content="'+[networkMinerData.config.ip, networkMinerData.config.port].join(':')+'">Online</span> '+netKey+'</h4>');
 
@@ -2876,12 +2876,12 @@ function getStats(refresh)
 							{
 								var netpoolhashrate = (networkMinerData.pool.hashrate) ? networkMinerData.pool.hashrate : 0;
 							}
-							
+
 							if (networkMinerData.pools)
 							{
 								if ( !$.fn.dataTable.isDataTable('#net-pools-table-details-'+md5(netKey)) )
 								{
-									// Initialize the pools datatable	
+									// Initialize the pools datatable
 									$('#net-pools-table-details-'+md5(netKey)).dataTable({
 										'lengthMenu': [ 5, 10, 25, 50 ],
 										'pageLength': $('.app_data').data('records-per-page'),
@@ -2894,9 +2894,9 @@ function getStats(refresh)
 											//	nRow.className = 'bg-dark';
 											return nRow;
 										},
-										'aoColumnDefs': [ 
+										'aoColumnDefs': [
 										{
-											'aTargets': [ 5 ],	
+											'aTargets': [ 5 ],
 											'mRender': function ( data, type, full ) {
 												if (type === 'display')
 												{
@@ -2906,7 +2906,7 @@ function getStats(refresh)
 											},
 										},
 										{
-											'aTargets': [ 7, 9, 11 ],	
+											'aTargets': [ 7, 9, 11 ],
 											'mRender': function ( data, type, full ) {
 												if (type === 'display')
 												{
@@ -2918,10 +2918,10 @@ function getStats(refresh)
 										]
 									});
 								}
-								
+
 								// Add pools data
 								var pdonationUrl = false;
-								$.each(networkMinerData.pools, function( pkey, pval ) 
+								$.each(networkMinerData.pools, function( pkey, pval )
 								{
 									var parser = document.createElement('a'),
 										picon = 'download',
@@ -2937,15 +2937,15 @@ function getStats(refresh)
 										purl = pval.url,
 										pshorturl = purl,
 										pool_shares = 0;
-									
+
 									parser.href = pval.url;
 
 									if (parser.hostname) {
 										pshorturl = parser.hostname;
 									} else {
-										pshorturl = pval.url.replace('stratum+tcp://', '').split(':')[0];	
+										pshorturl = pval.url.replace('stratum+tcp://', '').split(':')[0];
 									}
-									
+
 									if (pval.alive)
 									{
 										paliveclass = 'success';
@@ -2956,7 +2956,7 @@ function getStats(refresh)
 										paliveclass = 'danger';
 										palivelabel = 'Dead';
 									}
-									
+
 									puserlabel = 'blue';
 									purlicon = '<i class="fa fa-flash"></i>&nbsp;';
 									if (pval.user === $('.app_data').data('minera-pool-username'))
@@ -2966,10 +2966,10 @@ function getStats(refresh)
 										pdonationUrl = true;
 										$('.net-pools-addbox-'+md5(netKey)+' .add-net-donation-pool').fadeOut();
 									}
-				
+
 									// Main pool
 									if (pval.active === true || pval.active === 1)
-									{	
+									{
 										pool_shares_seconds = parseFloat((now/1000)-pval.start_time);
 										pool_shares = pval.shares;
 										picon = 'upload';
@@ -2980,14 +2980,14 @@ function getStats(refresh)
 										pactivelab = 'Selected';
 										pshorturl = '<strong>'+pshorturl+'</strong>';
 									}
-									
+
 									var pstatsId = pval.stats_id;
 									var pshares = 0; var paccepted = 0; var prejected = 0; var psharesPrev = 0; var pacceptedPrev = 0; var prejectedPrev = 0; var phashData = {}; phashData.hash = 0; phashData.label = 'muted'; phashData.pstart_time = 'Never started';
 									// Get the pool stats
-									for (var p = 0; p < pval.stats.length; p++) 
+									for (var p = 0; p < pval.stats.length; p++)
 									{
 										var pstats = pval.stats[p];
-				
+
 										if (pstatsId === pstats.stats_id)
 										{
 											phashData.pstart_time = new Date(pstats.start_time*1000);
@@ -2995,15 +2995,15 @@ function getStats(refresh)
 											pshares = pstats.shares;
 											paccepted = pstats.accepted;
 											prejected = pstats.rejected;
-											
+
 											// Calculate the real pool hashrate
-											if (pval.active === true || pval.active === 1) 
+											if (pval.active === true || pval.active === 1)
 											{
 												phashData.hash = parseInt(netpoolhashrate/1000); //parseInt((65536.0 * (pshares/(now/1000-pstats.start_time)))/1000);
 												phashData.label = 'red';
 												netPoolHashrates += phashData.hash;
 											}
-				
+
 										}
 										else
 										{
@@ -3012,11 +3012,11 @@ function getStats(refresh)
 											prejectedPrev = prejectedPrev + pstats.rejected;
 										}
 									}
-				
+
 									if ( $.fn.dataTable.isDataTable('#net-pools-table-details-'+md5(netKey)) )
 									{
 										pval.usershort = (pval.user.length > 15) ? pval.user.substring(0, 15)+'...' : pval.user;
-										
+
 										// Add Pool rows via datatable
 										$('#net-pools-table-details-'+md5(netKey)).dataTable().fnAddData( [
 											'<button class="btn btn-xs btn-danger '+pactivelabclass+' remove-net-pool" data-pool-id="'+pkey+'" data-pool-config="'+[networkMinerData.config.ip, networkMinerData.config.port].join(':')+'" data-netminer="'+md5(netKey)+'"><i class="fa fa-close"></i></button>',
@@ -3034,9 +3034,9 @@ function getStats(refresh)
 											'<span class="badge bg-'+puserlabel+'" data-toggle="tooltip" title="'+pval.user+'">'+pval.usershort+'</span>'
 										] );
 									}
-									
+
 								});
-								
+
 								if (pdonationUrl === false) {
 									$('.net-pools-addbox-'+md5(netKey)+' .add-net-donation-pool').fadeIn();
 								}
@@ -3067,36 +3067,36 @@ function getStats(refresh)
 									0
 								] );
 							}
-							
+
 							// Add empty network pools table
 							$('.net-pools-label-'+md5(netKey)).html('<h4><span class="label label-danger" data-toggle="popover" data-title="'+netKey+'" data-content="'+[networkMinerData.config.ip, networkMinerData.config.port].join(':')+'">Offline</span> '+netKey+'</h4>');
 							$('#net-pools-table-details-'+md5(netKey)).html('<div class="alert alert-warning"><i class="fa fa-warning"></i><strong>No active pools</strong> data available.</div>');
 							$('.net-pools-addbox-'+md5(netKey)).fadeOut();
 						}
 					});
-					
+
 					var tPercentageRe = 0, tPercentageHw = 0, tot_last_share_secs = 0, netDevRow;
-					
+
 					if (networkMiners.total !== undefined) {
 						var totalShares = (networkMiners.total.ac+networkMiners.total.re+networkMiners.total.hw),
 							tPercentageAc = (100*networkMiners.total.ac/totalShares),
 							tot_last_share_date = Math.min.apply(Math, tLastShares)*1000;
-						
+
 						tPercentageRe = (100*networkMiners.total.re/totalShares);
 						tPercentageHw = (100*networkMiners.total.hw/totalShares);
 						tot_last_share_secs = (tot_last_share_date > 0) ? (new Date().getTime() - tot_last_share_date)/1000 : 0;
-							
+
 						if (tot_last_share_secs < 0) tot_last_share_secs = 0;
-						
-						netDevRow = '<tr class="dev-total"><td class="devs_table_name"><i class="gi gi-server"></i>&nbsp;&nbsp;Total</td><td class="devs_table_temp">-</td><td class="devs_table_freq">-</td><td class="devs_table_hash"><strong>'+ convertHashrate(netHashrates) +'</strong></td><td class="devs_table_sh">'+ networkMiners.total.sh +'</td><td class="devs_table_ac">'+ networkMiners.total.ac +'</td><td><small class="text-muted">'+parseFloat(tPercentageAc).toFixed(2)+'%</small></td><td class="devs_table_re">'+ networkMiners.total.re +'</td><td><small class="text-muted">'+parseFloat(tPercentageRe).toFixed(2)+'%</small></td><td class="devs_table_hw">'+ networkMiners.total.hw +'</td><td><small class="text-muted">'+parseFloat(tPercentageHw).toFixed(2)+'%</small></td><td class="devs_table_ls">'+ parseInt(tot_last_share_secs) +' secs ago</td><td><small class="text-muted">'+new Date(tot_last_share_date).toUTCString()+'</small></td></tr>';				
-						
+
+						netDevRow = '<tr class="dev-total"><td class="devs_table_name"><i class="gi gi-server"></i>&nbsp;&nbsp;Total</td><td class="devs_table_temp">-</td><td class="devs_table_freq">-</td><td class="devs_table_hash"><strong>'+ convertHashrate(netHashrates) +'</strong></td><td class="devs_table_sh">'+ networkMiners.total.sh +'</td><td class="devs_table_ac">'+ networkMiners.total.ac +'</td><td><small class="text-muted">'+parseFloat(tPercentageAc).toFixed(2)+'%</small></td><td class="devs_table_re">'+ networkMiners.total.re +'</td><td><small class="text-muted">'+parseFloat(tPercentageRe).toFixed(2)+'%</small></td><td class="devs_table_hw">'+ networkMiners.total.hw +'</td><td><small class="text-muted">'+parseFloat(tPercentageHw).toFixed(2)+'%</small></td><td class="devs_table_ls">'+ parseInt(tot_last_share_secs) +' secs ago</td><td><small class="text-muted">'+new Date(tot_last_share_date).toUTCString()+'</small></td></tr>';
+
 						// Network Widgets
 						$('.network-widget-last-share').html(parseInt(tot_last_share_secs) + ' secs');
 						$('.network-widget-hwre-rates').html(parseFloat(tPercentageHw).toFixed(2) + '<sup style="font-size: 20px">%</sup> / ' + parseFloat(tPercentageRe).toFixed(2) + '<sup style="font-size: 20px">%</sup>');
-						
+
 					} else {
 						netDevRow = '<tr class="dev-total"><td class="devs_table_name"><i class="gi gi-server"></i>&nbsp;&nbsp;Total</td><td class="devs_table_temp">-</td><td class="devs_table_freq">-</td><td class="devs_table_hash"><strong>-</strong></td><td class="devs_table_sh">-</td><td class="devs_table_ac">-</td><td><small class="text-muted">-</small></td><td class="devs_table_re">-</td><td><small class="text-muted">-</small></td><td class="devs_table_hw">-</td><td><small class="text-muted">-</small></td><td class="devs_table_ls">-</td><td><small class="text-muted">-</small></td></tr>';
-						
+
 						// Network Widgets
 						$('.network-widget-last-share').html('&infin; secs');
 						$('.network-widget-hwre-rates').html('Not available');
@@ -3104,7 +3104,7 @@ function getStats(refresh)
 					}
 
 				    $('.network_devs_table_foot').html(netDevRow);
-				    
+
 				    //Add Network Main pool widget
 					$('.network-widget-total-hashrate').html(convertHashrate(netPoolHashrates));
 					$('.network-widget-total-hashrate').data('pool-hashrate', netPoolHashrates);
@@ -3119,18 +3119,18 @@ function getStats(refresh)
 					$('.network-miners-widget-section').hide();
 				}
 			} // End network miner details
-			
+
 			// Add controller temperature
 			if (data.temp)
 			{
-				var temp_bar = 'bg-blue', 
+				var temp_bar = 'bg-blue',
 					temp_text = 'It\'s cool here',
 					sys_temp = parseFloat(data.temp.value),
 					tempthres1,
 					tempthres2,
 					tempthres3,
 					sys_temp_box;
-				
+
 				if (data.temp.scale === 'c')
 				{
 					tempthres1 = 40; tempthres2 = 60; tempthres3 = 75;
@@ -3139,7 +3139,7 @@ function getStats(refresh)
 				{
 					tempthres1 = 104; tempthres2 = 140; tempthres3 = 167;
 				}
-				
+
 				if (sys_temp > tempthres1 && sys_temp < tempthres2)
 				{
 					temp_bar = 'bg-green';
@@ -3155,7 +3155,7 @@ function getStats(refresh)
 					temp_bar = 'bg-red';
 					temp_text = 'HEY MAN! I\'m burning! Blow blow!';
 				}
-				
+
 				sys_temp_box = parseFloat(sys_temp).toFixed(2)+'&deg;'+$('.app_data').data('dashboard-temp');
 				//<div class="progress xs progress-striped active"><div class="progress-bar progress-bar-'+temp_bar+'" role="progressbar" aria-valuenow="'+parseInt(sys_temp)+'" aria-valuemin="0" aria-valuemax="100" style="width: '+parseInt(sys_temp)+'%"></div></div>';
 				$('.sys-temp-box').addClass(temp_bar);
@@ -3167,7 +3167,7 @@ function getStats(refresh)
 				$('.widget-sys-temp').html('N.a.');
 				$('.sys-temp-footer').html('Temperature not available <i class="fa fa-arrow-circle-right">');
 			}
-			
+
 			// Get profitability stats
 			if (data.profits)
 			{
@@ -3176,7 +3176,7 @@ function getStats(refresh)
 
 				if ( !$.fn.dataTable.isDataTable('#profit-table-details') )
 				{
-					// Initialize the profit datatable	
+					// Initialize the profit datatable
 					$('#profit-table-details').dataTable({
 						'bAutoWidth': false,
 						'lengthChange': false,
@@ -3186,7 +3186,7 @@ function getStats(refresh)
 						'stateSave': true,
 						'order': [[ 6, 'desc' ]],
 						'aoColumnDefs': [{
-							'aTargets': [ 3 ],	
+							'aTargets': [ 3 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3195,7 +3195,7 @@ function getStats(refresh)
 								return data;
 							},
 						},{
-							'aTargets': [ 4 ],	
+							'aTargets': [ 4 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3204,7 +3204,7 @@ function getStats(refresh)
 								return data;
 							},
 						},{
-							'aTargets': [ 5 ],	
+							'aTargets': [ 5 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3216,7 +3216,7 @@ function getStats(refresh)
 								return data;
 							},
 						},{
-							'aTargets': [ 6 ],	
+							'aTargets': [ 6 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3225,7 +3225,7 @@ function getStats(refresh)
 								return data;
 							},
 						},{
-							'aTargets': [ 7 ],	
+							'aTargets': [ 7 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3234,7 +3234,7 @@ function getStats(refresh)
 								return data;
 							},
 						},{
-							'aTargets': [ 1 ],	
+							'aTargets': [ 1 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3243,7 +3243,7 @@ function getStats(refresh)
 								return data;
 							},
 						},{
-							'aTargets': [ 8 ],	
+							'aTargets': [ 8 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3252,7 +3252,7 @@ function getStats(refresh)
 								return data;
 							},
 						},{
-							'aTargets': [ 9 ],	
+							'aTargets': [ 9 ],
 							'mRender': function ( data, type, full ) {
 								if (type === 'display')
 								{
@@ -3261,7 +3261,7 @@ function getStats(refresh)
 								return data;
 							},
 						}],
-					});	
+					});
 				}
 
 				// Update datatable profit function
@@ -3273,8 +3273,8 @@ function getStats(refresh)
 					$('.profit_local_hashrate').html( ($('.profit_hashrate').val() > 0) ? $('.profit_hashrate').val()+$('.profit_unit').find('option:selected').data('profit-unit') : convertHashrate(thisHash));
 					$('.profit_local_period').html($('.profit_period').find('option:selected').data('profit-period'));
 					$('.profit_local_algo').html($('.profit_algo').data('profit-algo'));
-						
-					$.each( data.profits, function( coin, profit ) 
+
+					$.each( data.profits, function( coin, profit )
 					{
 						if ( $.fn.dataTable.isDataTable('#profit-table-details') && !profit.error )
 						{
@@ -3292,15 +3292,15 @@ function getStats(refresh)
 								profit.algo
 							] );
 						}
-						
+
 					});
 
 					maxProfit = _.max(data.profits, function (v) { return (currentProfitData.hash*v.btc_profitability); });
-				};	
+				};
 
 				var btc = _.filter(data.profits, function (v) { return v.symbol === 'btc'; });
 				btc = (btc[0]) ? btc[0] : 0;
-				
+
 				var totalHash = (data.totals && data.totals.hashrate) ? data.totals.hashrate : 0,
 					selHashrate = ($('.profit_hashrate').val() > 0) ? $('.profit_hashrate').val() : 0,
 					selUnit = $('.profit_unit').val(),
@@ -3317,11 +3317,11 @@ function getStats(refresh)
 					selHashrate = ($('.profit_hashrate').val() > 0) ? $('.profit_hashrate').val() : 0;
 					selUnit = $('.profit_unit').val();
 					selPeriod = $('.profit_period').val();
-					
+
 					currentProfitData.hash = (selHashrate > 0) ? selUnit*selHashrate*selPeriod : totalHash/1000000;
 					updateProfitDataTable(data, currentProfitData);
 				});
-				
+
 				$('.profit_hashrate').change(function (e) {
 					selHashrate = ($('.profit_hashrate').val() > 0) ? $('.profit_hashrate').val() : 0;
 					selUnit = $('.profit_unit').val();
@@ -3330,14 +3330,14 @@ function getStats(refresh)
 					currentProfitData.hash = (selHashrate > 0) ? selUnit*selHashrate*selPeriod : totalHash/1000000;
 					updateProfitDataTable(data, currentProfitData);
 				});
-				
+
 				$('.profit-table-details-error').html('');
 			}
 			else
 			{
 				$('.profit-table-details-error').html('<div class="alert alert-warning"><i class="fa fa-warning"></i><strong>No coins</strong> data available, please wait and try to refresh.</div>');
 			}
-						
+
 			// Add Miner Uptime widget
 			var uptime = convertMS(now - data.start_time*1000);
 
@@ -3345,41 +3345,41 @@ function getStats(refresh)
 			for (var ukey in uptime) {
 				human_uptime = human_uptime + '' + uptime[ukey] + ukey + ' ';
 			}
-			
+
 			$('.widget-uptime').html(human_uptime);
 			$('.uptime-footer').html('Started on <strong>'+startdate.toUTCString()+'</strong>');
-			
+
 			// Add System Uptime
 			var sysuptime = convertMS(data.sysuptime*1000),
 				human_sysuptime = '',
 				llabel;
-				
+
 			for (var uukey in sysuptime) {
 				human_sysuptime = human_sysuptime + '' + sysuptime[uukey] + uukey + ' ';
 			}
-			
+
 			$('.sysuptime').html('System has been up for: <strong>' + human_sysuptime + '</strong>');
-		    
+
 			// Add server load average knob graph
-			$.each( data.sysload, function( lkey, lval ) 
+			$.each( data.sysload, function( lkey, lval )
 			{
 				if (lkey === 0) llabel = '1min';
 				if (lkey === 1) llabel = '5min';
 				if (lkey === 2) llabel = '15min';
-			
+
 				var loadBox = '<div class="col-xs-4 text-center" id="loadavg-'+ lkey +'" style="border-right: 1px solid #f4f4f4"><input type="text" class="loadstep-'+ lkey +'" data-width="60" data-height="60" /><div class="knob-label"><p>'+llabel+'</p></div></div>';
 
 				$('#loadavg-'+lkey).remove();
-				
+
 				$('.sysload').append(loadBox);
-				
+
 				var lmax = 1, lcolor = 'rgb(71, 134, 81)';
-				
+
 				if (lval >= 0 && lval <= 1) { lmax = 1; lcolor = '#00a65a'; }
 				else if (lval > 1 && lval <= 5) { lmax = 5; lcolor = '#f39c12'; }
 				else if (lval > 5 && lval <= 10) { lmax = 10; lcolor = '#f56954'; }
 				else { lmax = lval+(lval*10/100); lcolor = '#777777'; }
-				
+
 				$('.loadstep-'+lkey).knob({
 			        'readOnly': true,
 			        'fgColor':lcolor,
@@ -3387,7 +3387,7 @@ function getStats(refresh)
 						$(this.i).val(this.cv);
 					}
 				});
-					
+
 				$('.loadstep-'+lkey)
 					.trigger(
 						'configure',
@@ -3401,52 +3401,52 @@ function getStats(refresh)
 				$({value: 0}).animate({value: lval}, {
 				    duration: 2000,
 				    easing:'swing',
-				    step: function() 
+				    step: function()
 				    {
 				        $('.loadstep-'+lkey).val(this.value).trigger('change');
 				    }
 				});
-				    
+
 				$('.loadstep-'+lkey).css('font-size','10px');
 			});
-			
+
 		} // End if error/notrunning
-		
+
 		$('.overlay').hide();
 		$('.loading-img').hide();
 		$('.refresh-icon').removeClass('fa-spin');
-	    
+
 	}); // End get live stats
-	
+
 	/* Morris.js Charts */
 	if (thisSection === 'dashboard') {
 		// get Json data from stored_stats url (redis) and create the graphs
-		$.getJSON(_baseUrl+'/app/api?command=history_stats&type=hourly', function( data ) 
-		{		
-			var dataMorris = Object.keys(data).map(function(key) { 
-				data[key].timestamp = data[key].timestamp*1000; 
+		$.getJSON(_baseUrl+'/app/api?command=history_stats&type=hourly', function( data )
+		{
+			var dataMorris = Object.keys(data).map(function(key) {
+				data[key].timestamp = data[key].timestamp*1000;
 				data[key].hashrate = (data[key].hashrate/1000/1000).toFixed(2);
-				data[key].pool_hashrate = (data[key].pool_hashrate/1000/1000).toFixed(2);									
+				data[key].pool_hashrate = (data[key].pool_hashrate/1000/1000).toFixed(2);
 				return data[key];
 			});
-		
+
 			var redrawGraphs = function ()
 			{
 			    charts.areaHash.redraw();
 			    charts.areaRej.redraw();
-				    
+
 			    return false;
 			};
-			
+
 			var updateGraphs = function()
 			{
 				console.log(dataMorris);
 			    charts.areaHash.setData(dataMorris);
 			    charts.areaRej.setData(dataMorris);
-				    
+
 			    return false;
 			};
-			
+
 			if (dataMorris.length && errorTriggered === false)
 			{
 					// Initialise new obj
@@ -3454,7 +3454,7 @@ function getStats(refresh)
 						areaHash: {},
 						areaRej: {}
 					};
-					
+
 					// Hashrate history graph
 					charts.areaHash = new Morris.Area({
 						element: 'hashrate-chart',
@@ -3470,9 +3470,9 @@ function getStats(refresh)
 						pointSize: 3,
 						hideHover: 'auto',
 						behaveLikeLine: true
-	
-					});	
-					
+
+					});
+
 					// Rejected/Errors graph
 					charts.areaRej = new Morris.Area({
 						element: 'rehw-chart',
@@ -3488,22 +3488,22 @@ function getStats(refresh)
 						hideHover: 'auto',
 						behaveLikeLine: true
 					});
-				
-				
+
+
 				$(window).resize(function() {
 					redrawGraphs();
 				});
-				
+
 				$('.sidebar-toggle').click(function() { redrawGraphs(); });
 			}
 			else
 			{
-				$('.chart').css({'height': '100%', 'overflow': 'visible', 'margin-top': '10px'}).html('<div class="alert alert-warning"><i class="fa fa-warning"></i><b>Oops!</b> <small>No data collected, You need at least 5 minutes of data to see the chart.</small></div>');	
+				$('.chart').css({'height': '100%', 'overflow': 'visible', 'margin-top': '10px'}).html('<div class="alert alert-warning"><i class="fa fa-warning"></i><b>Oops!</b> <small>No data collected, You need at least 5 minutes of data to see the chart.</small></div>');
 			}
-			
+
 			//$('.overlay').hide();
 			//$('.loading-img').hide();
-			
+
 		}); //End get stored stats
 	}
 } // End function getStats()

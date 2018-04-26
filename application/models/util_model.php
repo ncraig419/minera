@@ -17,33 +17,33 @@ class Util_model extends CI_Model {
 		parent::__construct();
 	}
 
-	public function isLoggedIn() 
+	public function isLoggedIn()
 	{
 		if (!$this->session->userdata("loggedin"))
 		{
 			redirect('app/index');
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	public function switchMinerSoftware($software = false, $network = false)
 	{
 		if ($this->redis->get("minerd_use_root"))
 		{
-			$this->config->set_item('system_user', 'root');		
+			$this->config->set_item('system_user', 'root');
 		}
 		else
 		{
 			$this->config->set_item('system_user', 'minera');
 		}
-		
+
 		if ($software)
 			$this->_minerdSoftware = $software;
 		else
 			$this->_minerdSoftware = $this->redis->get('minerd_software');
-			
+
 		if ($this->_minerdSoftware == "bfgminer")
 		{
 			// Config for Bfgminer
@@ -54,7 +54,7 @@ class Util_model extends CI_Model {
 			$this->config->set_item('minerd_log_file', '/var/log/minera/bfgminer.log');
 			$this->config->set_item('minerd_special_log', false);
 			$this->config->set_item('minerd_log_url', 'application/logs/bfgminer.log');
-			$this->load->model('cgminer_model', 'miner');			
+			$this->load->model('cgminer_model', 'miner');
 		}
 		elseif ($this->_minerdSoftware == "cgminer")
 		{
@@ -104,18 +104,18 @@ class Util_model extends CI_Model {
 			$this->config->set_item('minerd_log_url', 'application/logs/'.$this->_minerdSoftware.'.log');
 			$this->load->model('cgminer_model', 'miner');
 		}
-		
+
 		if ($network) $this->load->model('cgminer_model', 'network_miner');
-		
+
 		return true;
 	}
-	
+
 	/*
 	//
 	// Stats related stuff
 	//
 	*/
-	
+
 	// Get the live stats from miner
 	public function getStats()
 	{
@@ -123,17 +123,17 @@ class Util_model extends CI_Model {
 		$a = new stdClass();
 		$altcoinData = $this->getAltcoinsRates();
 		$btcData = $this->getBtcUsdRates();
-		
+
 		if ($this->isOnline())
 		{
 			$miner = $this->getMinerStats();
 
 			$a = json_decode($this->getParsedStats($miner));
-			
+
 			if (is_object($a) && is_object($miner))
-			{			
-				$a->pools = $miner->pools;	
-				
+			{
+				$a->pools = $miner->pools;
+
 				// Encode and save the latest
 				$l = json_encode($a);
 				$this->redis->set("latest_stats", $l);
@@ -156,68 +156,68 @@ class Util_model extends CI_Model {
 		{
 			$a->notrunning = true;
 		}
-		
+
 		$a->network_miners = $this->getNetworkMinerStats(true);
-		
+
 		// Add Minera ID
 		$a->minera_id = $this->generateMineraId();
-		
+
 		// Add miner software used
 		$a->miner = $this->_minerdSoftware;
-		
+
 		// Add local algo used
 		$a->algo = $this->checkAlgo(true);
-		
+
 		//log_message("error", var_export($netStats, true));
-		
+
 		// Add sysload stats
 		$a->sysload = sys_getloadavg();
-		
+
 		// Add cron status
 		$a->cron = $this->redis->get("cron_lock");
-		
+
 		// Add sysuptime
 		$a->sysuptime = $this->getSysUptime();
-		
+
 		// Add controller temp
-		$a->temp = $this->checkTemp();				
-		
+		$a->temp = $this->checkTemp();
+
 		// Add BTC rates
 		$a->btc_rates = $btcData;
-		
+
 		// Add AltCoin rates
 		$a->altcoins_rates = $altcoinData;
-		
+
 		// Add average stats
 		$a->avg = $this->getStoredAvgStats();
-		
+
 		// Add coins profitability
 		$a->profits = json_decode($this->redis->get('coins_profitability'), true, 512, JSON_BIGINT_AS_STRING);
-		
+
 		$a->livestat = true;
 
 		$a->timestamp = $date->getTimestamp();
-		
+
 		// Publish stats to Redis
 		$this->redis->publish("minera-channel", json_encode($a));
 
-		return json_encode($a);		
+		return json_encode($a);
 	}
-	
+
 	public function getNetworkMinerStats($parsed)
 	{
 		$a = array();
-		
+
 		$netMiners = $this->getNetworkMiners();
-		
+
 		if (count($netMiners) > 0)
 		{
 			$this->load->model('cgminer_model', 'network_miner');
-			
+
 			foreach ($netMiners as $netMiner) {
 				$a[$netMiner->name] = new stdClass();
 
-				if ($this->checkNetworkDevice($netMiner->ip, $netMiner->port)) 
+				if ($this->checkNetworkDevice($netMiner->ip, $netMiner->port))
 				{
 					$n = $this->getMinerStats($netMiner->ip.":".$netMiner->port, $netMiner->algo, $netMiner->type);
 
@@ -237,12 +237,12 @@ class Util_model extends CI_Model {
 
 		return $a;
 	}
-	
+
 	// Get the specific miner stats
 	public function getMinerStats($network = false, $algo = false, $type = false)
 	{
 		$tmpPools = null; $pools = array();
-		
+
 		if ($this->isOnline($network))
 		{
 			$cmd = false;
@@ -254,7 +254,7 @@ class Util_model extends CI_Model {
 			{
 				if ($this->_minerdSoftware == "cpuminer" && !$network) {
 					$pools = (isset($a->pools)) ? $a->pools : false;
-				} 
+				}
 				else
 				{
 					$devicePoolActives = false;
@@ -263,15 +263,15 @@ class Util_model extends CI_Model {
 					if (isset($a->devs[0]->DEVS))
 					{
 						$devicePoolIndex = array();
-						
+
 						foreach ($a->devs[0]->DEVS as $device)
-						{			
+						{
 							// Check the real active pool
 							if (isset($device->{'Last Share Pool'}) && $device->{'Last Share Pool'} > -1)
 								$devicePoolIndex[] = $device->{'Last Share Pool'};
-						}				
-						
-						$devicePoolActives = array_count_values($devicePoolIndex);					
+						}
+
+						$devicePoolActives = array_count_values($devicePoolIndex);
 					}
 
 					// Parse cg/bfgminer pools to be the same as cpuminer
@@ -287,7 +287,7 @@ class Util_model extends CI_Model {
 							} else {
 								$getworks = false;
 							}
-							
+
 							$stats = new stdClass();
 							$stats->start_time = false;
 							$stats->accepted = $tmpPool->Accepted;
@@ -297,7 +297,7 @@ class Util_model extends CI_Model {
 							$stats->stats_id = 1;
 
 							if (!$devicePoolActives) {
-								$poolActive = $tmpPool->{'Stratum Active'};	
+								$poolActive = $tmpPool->{'Stratum Active'};
 							} else {
 								$poolActive = ($devicePoolActives && array_key_exists($poolIndex, $devicePoolActives)) ? true : false;
 							}
@@ -311,9 +311,9 @@ class Util_model extends CI_Model {
 							$newpool->stats = array($stats);
 							$newpool->stats_id = 1;
 							$newpool->alive = ($tmpPool->Status == "Alive") ? 1 : 0;
-							
+
 							$pools[] = $newpool;
-							
+
 							unset($newpool);
 							unset($stats);
 						}
@@ -331,10 +331,10 @@ class Util_model extends CI_Model {
 								$pool->alive = $this->checkPool($pool->url);
 							else
 								$pool->alive = false;
-						}	
+						}
 					}
 				}
-				
+
 				$a->original_pools = $tmpPools;
 				$a->pools = $pools;
 				return $a;
@@ -348,19 +348,19 @@ class Util_model extends CI_Model {
 		{
 			return false;
 		}
-		
+
 		return false;
 	}
-	
+
 	/*
 	// Parse the miner stats to add devices
 	// with a summary total and active pool
 	*/
 	public function getParsedStats($stats, $network = false)
-	{		
+	{
 		$d = 0; $tdevice = array(); $tdtemperature = 0; $tdfrequency = 0; $tdaccepted = 0; $tdrejected = 0; $tdhwerrors = 0; $tdshares = 0; $tdhashrate = 0; $devicePoolActives = false;
 		$return = false;
-		
+
 		if (isset($stats->start_time))
 		{
 			$return['start_time'] = $stats->start_time;
@@ -374,7 +374,7 @@ class Util_model extends CI_Model {
 		{
 			$return['err'] = $stats->err;
 		}
-		
+
 		$poolHashrate = 0;
 
 		// CPUminer devices stats
@@ -385,7 +385,7 @@ class Util_model extends CI_Model {
 				foreach ($stats->devices as $name => $device)
 				{
 					$d++; $c = 0; $tcfrequency = 0; $tcaccepted = 0; $tcrejected = 0; $tchwerrors = 0; $tcshares = 0; $tchashrate = 0; $tclastshares = array();
-					
+
 					if ($device->chips)
 					{
 						foreach ($device->chips as $chip)
@@ -400,7 +400,7 @@ class Util_model extends CI_Model {
 							$tclastshares[] = $chip->last_share;
 						}
 					}
-					
+
 					$return['devices'][$name]['temperature'] = false;
 					$return['devices'][$name]['frequency'] = ($c > 0) ? round(($tcfrequency/$c), 0) : 0;
 					$return['devices'][$name]['accepted'] = $tcaccepted;
@@ -410,7 +410,7 @@ class Util_model extends CI_Model {
 					$return['devices'][$name]['hashrate'] = $tchashrate;
 					$return['devices'][$name]['last_share'] = (count($tclastshares) > 0) ? max($tclastshares) : 0;
 					$return['devices'][$name]['serial'] = (isset($device->serial)) ? $device->serial : false;
-									
+
 					$tdfrequency += $return['devices'][$name]['frequency'];
 					$tdaccepted += $return['devices'][$name]['accepted'];
 					$tdrejected += $return['devices'][$name]['rejected'];
@@ -419,7 +419,7 @@ class Util_model extends CI_Model {
 					$tdhashrate += $return['devices'][$name]['hashrate'];
 					$tdlastshares[] = $return['devices'][$name]['last_share'];
 				}
-				
+
 				$return['totals']['temperature'] = false;
 				$return['totals']['frequency'] = round(($tdfrequency/$d), 0);
 				$return['totals']['accepted'] = $tdaccepted;
@@ -428,7 +428,7 @@ class Util_model extends CI_Model {
 				$return['totals']['shares'] = $tdshares;
 				$return['totals']['hashrate'] = $tdhashrate;
 				$return['totals']['last_share'] = max($tdlastshares);
-				
+
 			}
 		// CG/BFGminer devices stats
 		} else {
@@ -436,12 +436,12 @@ class Util_model extends CI_Model {
 			if (isset($stats->stats[0]->STATS[0]) && isset($stats->stats[0]->STATS[0]->Type) && ($stats->stats[0]->STATS[0]->Type == 'Antminer S9' || $stats->stats[0]->STATS[0]->Type == 'Antminer L3+' || $stats->stats[0]->STATS[0]->Type == 'Antminer D3')) $antNew = true;
 
 			if (isset($stats->devs[0]->DEVS)) {
-				
+
 				foreach ($stats->devs[0]->DEVS as $device) {
 					$d++; $c = 0; $tcfrequency = 0; $tcaccepted = 0; $tcrejected = 0; $tchwerrors = 0; $tcshares = 0; $tchashrate = 0; $tclastshares = array();
-									
+
 					$name = $device->Name.$device->ID;
-					
+
 					$return['devices'][$name]['temperature'] = (isset($device->Temperature)) ? $device->Temperature : false;
 					$return['devices'][$name]['frequency'] = (isset($device->Frequency)) ? $device->Frequency : false;
 					$return['devices'][$name]['accepted'] = $device->Accepted;
@@ -452,7 +452,7 @@ class Util_model extends CI_Model {
 						if (isset($device->{'KHS av'}))	$return['devices'][$name]['hashrate'] = ($device->{'KHS av'}*1000);
 						else $return['devices'][$name]['hashrate'] = ($device->{'MHS av'}*1000*1000);
 					} elseif (isset($device->{'Diff1 Work'})) {
-						$return['devices'][$name]['shares'] = ($device->{'Diff1 Work'}) ? round(($device->{'Diff1 Work'}*71582788/1000),0) : 0;	
+						$return['devices'][$name]['shares'] = ($device->{'Diff1 Work'}) ? round(($device->{'Diff1 Work'}*71582788/1000),0) : 0;
 						if (isset($device->{'KHS av'}))	$return['devices'][$name]['hashrate'] = ($device->{'KHS av'}*1000);
 						else $return['devices'][$name]['hashrate'] = ($device->{'MHS av'}*1000*1000);
 					} else {
@@ -465,17 +465,17 @@ class Util_model extends CI_Model {
 					if (isset($device->{'Device Elapsed'})) $return['devices'][$name]['last_share'] = $device->{'Device Elapsed'};
 					$return['devices'][$name]['serial'] = (isset($device->Serial)) ? $device->Serial : false;;
 
-					$tdtemperature += $return['devices'][$name]['temperature'];					
+					$tdtemperature += $return['devices'][$name]['temperature'];
 					$tdfrequency += $return['devices'][$name]['frequency'];
 					$tdshares += $return['devices'][$name]['shares'];
 					$tdhashrate += $return['devices'][$name]['hashrate'];
-					
+
 					// Check the real active pool
 					$devicePoolIndex = [];
 					if (isset($device->{'Last Share Pool'})) $devicePoolIndex[] = $device->{'Last Share Pool'};
-				}				
-				
-				$devicePoolActives = array_count_values($devicePoolIndex);				
+				}
+
+				$devicePoolActives = array_count_values($devicePoolIndex);
 			}
 
 			// Antminer L3+
@@ -502,20 +502,20 @@ class Util_model extends CI_Model {
 				if (isset($device->{'GHS av'}))	$return['devices'][$stats->stats[0]->STATS[0]->Type]['hashrate'] = ($device->{'GHS av'} * 1000 * 1000 * 1000);
 				$return['devices'][$stats->stats[0]->STATS[0]->Type]['last_share'] = $summaryAntNew->{'Last getwork'};
 
-				$tdtemperature = $return['devices'][$stats->stats[0]->STATS[0]->Type]['temperature'];					
+				$tdtemperature = $return['devices'][$stats->stats[0]->STATS[0]->Type]['temperature'];
 				$tdfrequency = $return['devices'][$stats->stats[0]->STATS[0]->Type]['frequency'];
 				$tdshares = $return['devices'][$stats->stats[0]->STATS[0]->Type]['shares'];
 				$tdhashrate = $return['devices'][$stats->stats[0]->STATS[0]->Type]['hashrate'];
-				
+
 				// Check the real active pool
 				$devicePoolIndex[] = 0;
 			}
-			
+
 			if (isset($stats->summary[0]->SUMMARY[0])) {
 				// log_message("error", var_export($stats->summary[0]->SUMMARY[0], true));
 				$totals = $stats->summary[0]->SUMMARY[0];
 
-				$return['totals']['temperature'] = ($tdtemperature) ? round(($tdtemperature/$d), 2) : false;				
+				$return['totals']['temperature'] = ($tdtemperature) ? round(($tdtemperature/$d), 2) : false;
 				$return['totals']['frequency'] = ($tdfrequency) ? round(($tdfrequency/$d), 0) : false;
 				$return['totals']['accepted'] = $totals->Accepted;
 				$return['totals']['rejected'] = $totals->Rejected;
@@ -523,9 +523,9 @@ class Util_model extends CI_Model {
 				$return['totals']['shares'] = $tdshares;
 				$return['totals']['hashrate'] = $tdhashrate;
 				$return['totals']['last_share'] = $totals->{'Last getwork'};
-				
+
 				//log_message("error", var_export($stats->summary[0]->STATUS[0]->Description, true));
-				
+
 				if ($this->_minerdSoftware == "cgdmaxlzeus") {
 					//$cgbfgminerPoolHashrate = round(65536.0 * ($totals->{'Difficulty Accepted'} / $totals->Elapsed), 0);
 					$cgbfgminerPoolHashrate = round($totals->{'Total MH'} / $totals->Elapsed * 1000000);
@@ -536,7 +536,7 @@ class Util_model extends CI_Model {
 				}
 			}
 		}
-		
+
 		if (isset($stats->pools))
 		{
 			$return['pool']['hashrate'] = 0;
@@ -575,57 +575,57 @@ class Util_model extends CI_Model {
 				}
 			}
 		}
-		
+
 		return json_encode($return);
 	}
 
 	// Get the stored stats from Redis
 	public function getStoredAvgStats()
-	{	
+	{
 		$periods = array("1min" => 60, "5min" => 300, "1hour" => 3600, "1day" => 86400);
-		
+
 		foreach ($periods as $period => $seconds)
 		{
 			if ($seconds == 60)
 				$rows = $this->redis->command("ZREVRANGE minerd_delta_stats 0 1");
 			else
 				$rows = $this->redis->command("ZREVRANGE minerd_avg_stats_$seconds 0 1");
-			
-			$avgs[$period] = array();			
+
+			$avgs[$period] = array();
 			if (count($rows) > 0)
 			{
-				foreach ($rows as $row)	
+				foreach ($rows as $row)
 				{
 					$row = json_decode($row);
 					$avgs[$period][] = $row;
 				}
 			}
 		}
-		
+
 		return $avgs;
 	}
-	
+
 	// Get the stored stats from Redis
 	public function getStoredStats($seconds = 3600, $startTime = false, $avg = false)
-	{	
+	{
 		$current = ($startTime) ? $startTime : time();
 		$startTime = $current-$seconds;
-		
+
 		if ($avg)
 		{
 			$o = $this->redis->command("ZRANGEBYSCORE minerd_avg_stats_$avg $startTime $current");
 		}
 		else
 		{
-			$o = $this->redis->command("ZRANGEBYSCORE minerd_delta_stats $startTime $current");			
+			$o = $this->redis->command("ZRANGEBYSCORE minerd_delta_stats $startTime $current");
 		}
 
 		return $o;
 	}
-	
+
 	// Get the stored stats from Redis
 	public function getHistoryStats($type = "hourly")
-	{	
+	{
 		switch ($type)
 		{
 			case "hourly":
@@ -654,7 +654,7 @@ class Util_model extends CI_Model {
 				$avg = 86400;
 			break;
 		}
-		
+
 		$items = array();
 
 		for ($i=0;$i<=($range*$period);$i+=$period)
@@ -666,16 +666,16 @@ class Util_model extends CI_Model {
 		}
 
 		$o = json_encode($items);
-		
+
 		return $o;
 	}
-	
+
 	public function avgStats($seconds = 900, $startTime = false, $avg = false)
 	{
 		$records = $this->getStoredStats($seconds, $startTime, $avg);
-		
+
 		$i = 0; $timestamp = 0; $poolHashrate = 0; $hashrate = 0; $frequency = 0; $accepted = 0; $errors = 0; $rejected = 0; $shares = 0;
-		
+
 		if (count($records) > 0)
 		{
 			foreach ($records as $record)
@@ -691,7 +691,7 @@ class Util_model extends CI_Model {
 				$rejected += (isset($obj->rejected)) ? $obj->rejected : 0;
 				$shares += (isset($obj->shares)) ? $obj->shares : 0;
 			}
-			
+
 			$timestamp = round(($timestamp/$i), 0);
 			$poolHashrate = round(($poolHashrate/$i), 0);
 			$hashrate = round(($hashrate/$i), 0);
@@ -717,29 +717,29 @@ class Util_model extends CI_Model {
 				"shares" => $shares
 			);
 		}
-		
+
 		return json_encode($o);
-		
+
 	}
-	
+
 	// Calculate and store the average statistics 5m / 1h / 1d
 	public function storeAvgStats($period = 300, $time = false)
 	{
 		$now = ($time) ? $time : time();
-		
+
 		// Period is in seconds 5m:300 / 1h:3600 / 1d:86400
 		$startTime = ($now - $period);
 		$stats = $this->avgStats($period, $startTime, false);
-		
+
 		// Store average stats for period
 		log_message("error", "Stored AVG stats for period ".$period.": ".$stats);
-		
+
 		$this->redis->command("ZREM minerd_avg_stats_".$period." false");
-		
+
 		if ($stats)
 			$this->redis->command("ZADD minerd_avg_stats_".$period. " ".$now." ".$stats);
 	}
-	
+
 	// Calculate and store the average statistics 5m / 1h / 1d for old delta stats
 	public function storeOldAvgStats($period)
 	{
@@ -757,34 +757,34 @@ class Util_model extends CI_Model {
 			}
 		}
 	}
-	
+
 	// Store the live stats on Redis
 	public function storeStats()
 	{
 		log_message('error', "Storing stats...");
-		
+
 		$data = new stdClass();
 		$stats = $this->getMinerStats();
-		
+
 		if ($stats)
 		{
 			$poolDonationId = false;
-				
+
 			// Add pool donation ID to the stats
 			if ($stats->pools && count($stats->pools) > 0)
 			{
 				foreach ($stats->pools as $pool)
-				{					
-					$mineraPoolUrl = ($this->checkAlgo(true) === "Scrypt") ? $this->config->item('minera_pool_url') : $this->config->item('minera_pool_url_sha256');					
+				{
+					$mineraPoolUrl = ($this->checkAlgo(true) === "Scrypt") ? $this->config->item('minera_pool_url') : $this->config->item('minera_pool_url_sha256');
 					// Don't check for the pool pass because Cgminer removes it from the stats showing "false" instead the real one and check fails
 					$poolDonationId = ($pool->url == $mineraPoolUrl && $pool->user == $this->getMineraPoolUser()) ? $pool->priority : false;
-				}			
+				}
 			}
-			
+
 			$data = json_decode($this->getParsedStats($stats));
 
 			$data->pool_donation_id = $poolDonationId;
-	
+
 			$ph = (isset($data->pool->hashrate)) ? $data->pool->hashrate : 0;
 			$dh = (isset($data->totals->hashrate)) ? $data->totals->hashrate : 0;
 			$fr = (isset($data->totals->frequency)) ? $data->totals->frequency : 0;
@@ -793,7 +793,7 @@ class Util_model extends CI_Model {
 			$re = (isset($data->totals->rejected)) ? $data->totals->rejected : 0;
 			$sh = (isset($data->totals->shares)) ? $data->totals->shares : 0;
 			$ls = (isset($data->totals->last_share)) ? $data->totals->last_share : 0;
-									
+
 			// Get totals
 			$o = array(
 				"timestamp" => time(),
@@ -806,7 +806,7 @@ class Util_model extends CI_Model {
 				"shares" => $sh,
 				"last_share" => $ls,
 			);
-	
+
 			// Get latest
 			$latest = $this->redis->command("ZREVRANGE minerd_totals_stats 0 0");
 			$lf = 0; $la = 0; $le = 0; $lr = 0; $ls = 0;
@@ -820,7 +820,7 @@ class Util_model extends CI_Model {
 				$lsh = $latest->shares;
 				$lls = (isset($latest->last_share)) ? $latest->last_share: 0;
 			}
-	
+
 			// Get delta current-latest
 			$delta = array(
 				"timestamp" => time(),
@@ -833,37 +833,38 @@ class Util_model extends CI_Model {
 				"shares" => max((int)($sh - $lsh), 0),
 				"last_share" => $lls,
 			);
-			
+
 			// Store delta
-			$this->redis->command("ZADD minerd_delta_stats ".time()." ".json_encode($delta));			
-			
+			$this->redis->command("ZADD minerd_delta_stats ".time()." ".json_encode($delta));
+
 			log_message('error', "Delta Stats stored as: ".json_encode($delta));
-			
+
 			// Store totals
 			$this->redis->command("ZADD minerd_totals_stats ".time()." ".json_encode($o));
-			
+
 			log_message('error', "Total Stats stored as: ".json_encode($o));
 		}
-		
+
 		return $data;
-		
+
 	}
-	
+
 	function getStoredDonations()
 	{
 		return $this->redis->command("LRANGE saved_donations 0 -1");
 	}
-	
+
 	function getMineraPoolUser()
 	{
 		$mineraSystemId = $this->generateMineraId();
-		
+
 		//return $this->config->item('minera_pool_username').$this->redis->get("minera_system_id");
 		return $this->config->item('minera_pool_username');
 	}
-	
+
 	function autoAddMineraPool()
-	{
+    {
+        return true;
 		$pools = json_decode($this->getPools()); $md5s = array();
 		$pools = (is_array($pools)) ? $pools : array();
 
@@ -873,15 +874,15 @@ class Util_model extends CI_Model {
 				$md5s[] = md5(strtolower($pool->url).strtolower($pool->username).strtolower($pool->password));
 			}
 		}
-		
+
 		$mineraMd5 = md5($this->config->item('minera_pool_url').$this->getMineraPoolUser().$this->config->item('minera_pool_password'));
 		$mineraSHA256Md5 = md5($this->config->item('minera_pool_url_sha256').$this->getMineraPoolUser().$this->config->item('minera_pool_password'));
-		
+
 		$algo = $this->checkAlgo(false);
-		
+
 		$keysSha = array(); $keysScrypt = array();
-		
-		$keysSha = array_keys($md5s, $mineraSHA256Md5);		
+
+		$keysSha = array_keys($md5s, $mineraSHA256Md5);
 		$keysScrypt = array_keys($md5s, $mineraMd5);
 
 		if (count($keysScrypt) > 0) {
@@ -892,29 +893,29 @@ class Util_model extends CI_Model {
 			}
 		}
 
-		if (count($keysSha) > 0) {		
+		if (count($keysSha) > 0) {
 			foreach ($keysSha as $vSha)
 			{
 				unset($pools[$vSha]);
 				unset($md5s[$vSha]);
 			}
 		}
-		
+
 		$pools = array_values($pools);
-			
+
 		if ($algo === "Scrypt" && !in_array($mineraMd5, $md5s))
 		{
 			array_push($pools, array("url" => $this->config->item('minera_pool_url'), "username" => $this->getMineraPoolUser(), "password" => $this->config->item('minera_pool_password')) );
-	
+
 			$this->setPools($pools);
 		}
 		elseif ($algo === "SHA-256" && !in_array($mineraSHA256Md5, $md5s))
 		{
 			array_push($pools, array("url" => $this->config->item('minera_pool_url_sha256'), "username" => $this->getMineraPoolUser(), "password" => $this->config->item('minera_pool_password')) );
-			
+
 			$this->setPools($pools);
 		}
-		
+
 		$newPools = $this->getPools();
 		$conf = json_decode($this->redis->get("minerd_json_settings"));
 		if (empty($conf)) $conf = new stdClass();
@@ -922,18 +923,18 @@ class Util_model extends CI_Model {
 
 		$jsonConfRedis = json_encode($conf);
 		$jsonConfFile = json_encode($conf, JSON_PRETTY_PRINT);
-		
+
 		//log_message("error", var_export($conf, true));
 		// Save the JSON conf file
 		file_put_contents($this->config->item("minerd_conf_file"), $jsonConfFile);
 		$this->redis->set("minerd_json_settings", $jsonConfRedis);
 	}
-	
-	function removeOldMineraPool() 
+
+	function removeOldMineraPool()
 	{
 		$pools = json_decode($this->getPools());
 		$newPools = array();
-		
+
 		foreach ($pools as $pool)
 		{
 			if ($pool->username !== 'michelem.minera') {
@@ -943,9 +944,9 @@ class Util_model extends CI_Model {
 				$newPools[] = $pool;
 			}
 		}
-		
+
 		$this->setPools($newPools);
-		
+
 		$conf = json_decode($this->redis->get("minerd_json_settings"));
 		if (!isset($conf)) $conf = new stdClass();
 		$conf->pools = [];
@@ -959,7 +960,7 @@ class Util_model extends CI_Model {
 		file_put_contents($this->config->item("minerd_conf_file"), $jsonConfFile);
 		$this->redis->set("minerd_json_settings", $jsonConfRedis);
 	}
-	
+
 	function setPools($pools)
 	{
 		return $this->redis->set("minerd_pools", json_encode($pools));
@@ -969,11 +970,11 @@ class Util_model extends CI_Model {
 	{
 		return $this->redis->get("minerd_pools");
 	}
-	
+
 	function parsePools($minerSoftware, $pools)
 	{
 		$poolsArray = array();
-		
+
 		if (is_array($pools)) {
 			foreach ($pools as $pool)
 			{
@@ -982,7 +983,7 @@ class Util_model extends CI_Model {
 					// CGminer has different method to add proxy pool
 					if (!empty($pool['proxy']))
 					{
-						$poolsArray[] = array("url" => $pool['proxy']."|".$pool['url'], "user" => $pool['username'], "pass" => $pool['password']);	
+						$poolsArray[] = array("url" => $pool['proxy']."|".$pool['url'], "user" => $pool['username'], "pass" => $pool['password']);
 					}
 					else
 					{
@@ -993,19 +994,19 @@ class Util_model extends CI_Model {
 				{
 					if (!empty($pool['proxy']))
 					{
-						$poolsArray[] = array("url" => $pool['url'], "user" => $pool['username'], "pass" => $pool['password'], "pool-proxy" => $pool['proxy']);	
+						$poolsArray[] = array("url" => $pool['url'], "user" => $pool['username'], "pass" => $pool['password'], "pool-proxy" => $pool['proxy']);
 					}
 					else
 					{
 						$poolsArray[] = array("url" => $pool['url'], "user" => $pool['username'], "pass" => $pool['password']);
-					}		
+					}
 				}
 			}
 		}
-		
+
 		return  $poolsArray;
 	}
-	
+
 	function setCommandline($string)
 	{
 		return $this->redis->set("minerd_settings", $string);
@@ -1015,13 +1016,13 @@ class Util_model extends CI_Model {
 	{
 		return $this->redis->get("minerd_settings");
 	}
-	
+
 	/*
 	//
 	// Clone/export/save/share configs
 	//
 	*/
-	
+
 	public function importFile($post)
 	{
 		$config['upload_path'] = '/tmp/';
@@ -1029,7 +1030,7 @@ class Util_model extends CI_Model {
 		$config['overwrite'] = true;
 
 		$this->load->library('upload', $config);
-		
+
 		if ( ! $this->upload->do_upload('import_system_config'))
 		{
 			$data = array('error' => $this->upload->display_errors());
@@ -1051,10 +1052,10 @@ class Util_model extends CI_Model {
 				}
 			}
 		}
-			
+
 		return $data;
 	}
-	
+
 	public function cloneSystem()
 	{
 		$data = $this->redis->get("import_data_tmp");
@@ -1064,7 +1065,7 @@ class Util_model extends CI_Model {
 			{
 				$this->redis->set($key, $value);
 			}
-			
+
 			$this->session->set_flashdata('message', '<b>Success!</b> System cloned!');
 			$this->session->set_flashdata('message_type', 'success');
 
@@ -1073,11 +1074,11 @@ class Util_model extends CI_Model {
 		log_message("error", "Cloning the system with this data: ".$data);
 
 		$this->redis->del("import_data_tmp");
-		
-			
+
+
 		return true;
 	}
-	
+
 	function deleteSavedConfig($id)
 	{
 		return $this->redis->command("HDEL saved_miner_configs ".$id);
@@ -1101,37 +1102,37 @@ class Util_model extends CI_Model {
 				$settings .= " -c ".$this->config->item("minerd_conf_file");
 				$this->setCommandline($settings);
 				$this->setPools($obj->pools);
-				
+
 				$poolsArray = array();
 				foreach ($obj->pools as $pool)
 				{
 					$poolsArray[] = array("url" => $pool->url, "user" => $pool->username, "pass" => $pool->password);
 				}
 				$confArray['pools'] = $poolsArray;
-			
+
 				// Prepare JSON conf
 				$jsonConfRedis = json_encode($confArray);
 				$jsonConfFile = json_encode($confArray, JSON_PRETTY_PRINT);
-			
+
 				// Save the JSON conf file
 				file_put_contents($this->config->item("minerd_conf_file"), $jsonConfFile);
 				$this->redis->set("minerd_json_settings", $jsonConfRedis);
-				
+
 				// Startup script rc.local
 				$this->saveStartupScript($obj->software);
-				
+
 				$this->session->set_flashdata('message', '<b>Success!</b> Miner config loaded!');
 				$this->session->set_flashdata('message_type', 'success');
 			}
 		}
 	}
-	
+
 	function shareSavedConfig($post)
 	{
 		$encoded = $this->redis->command("HGET saved_miner_configs ".$post['config_id']);
 
 		$data = array("error" => true);
-		
+
 		if ($encoded)
 		{
 			$obj = json_decode(base64_decode($encoded));
@@ -1139,35 +1140,35 @@ class Util_model extends CI_Model {
 			if (is_object($obj))
 			{
 				$data = array('timestamp' => $obj->timestamp, 'description' => $post['config_description'], 'miner' => $obj->software, 'settings' => $obj->settings);
-				
+
 				$result = $this->useCurl($this->config->item('minera_api_url').'/sendMinerConfig', false, "POST", json_encode($data));
-				
+
 				log_message("error", "Config sent to Minera: ".json_encode($data));
-		
+
 				$this->session->set_flashdata('message', '<b>Success!</b> Thanks to share your config');
 				$this->session->set_flashdata('message_type', 'success');
 			}
 		}
-		
+
 		return $data;
 	}
-			
+
 	/*
 	//
 	// Crypto rates related stuff
 	//
 	*/
-	
+
 	// Get profitability per coin
 	public function getProfitability($coin = null) {
 		$ctx = stream_context_create(array('http' => array('timeout' => 10)));
 		$profit = json_encode(array());
-		
+
 		$profit = @file_get_contents($this->config->item('minera_api_url').'/profit', 0, $ctx);
-		
+
 		return $profit;
 	}
-	
+
 	public function getAvgProfitability()
 	{
 		if (version_compare(PHP_VERSION, '5.4.0', '>=') && !(defined('JSON_C_VERSION') && PHP_INT_SIZE > 4)) {
@@ -1177,14 +1178,14 @@ class Util_model extends CI_Model {
 		}
 
 		$i = 1; $sum = 0; $ltc = 0;
-		
+
 		if (count($profits) > 0) {
 		    foreach($profits as $k => $v )
 		    {
 			    if (isset($v->btc_profitability) && $v->symbol === "ltc")
 			        $ltc = $v->btc_profitability;
 		    }
-    
+
 			foreach ($profits as $profit) {
 				if (isset($v->btc_profitability) && isset($profit->symbol) && $profit->symbol !== "btc" && $profit->symbol !== "ltc" && $profit->btc_profitability >= $ltc) {
 					$sum += $profit->btc_profitability;
@@ -1192,12 +1193,12 @@ class Util_model extends CI_Model {
 				}
 			}
 		}
-		
+
 		$o = (($sum+$ltc)/$i);
-		
+
 		return ($o > 0) ? number_format($o, 8) : false;
 	}
-	
+
 	// Get Bitstamp API to look at BTC/USD rates
 	public function getBtcUsdRates()
 	{
@@ -1205,9 +1206,9 @@ class Util_model extends CI_Model {
 		if (time() > ($this->redis->get("bitstamp_update")+600))
 		{
 			log_message('error', "Refreshing Bitstamp data");
-			
+
 			$object = false;
-			
+
 			if ($json = @file_get_contents("https://www.bitstamp.net/api/ticker/"))
 			{
 				if ($jsonConv = @file_get_contents('https://www.bitstamp.net/api/eur_usd/'))
@@ -1232,32 +1233,32 @@ class Util_model extends CI_Model {
 						"ask" => $a->ask,
 						"eur_usd" => $exchangeEur
 					);
-	
+
 					$object = json_decode(json_encode($o), FALSE);
 				}
 			}
-			
+
 			if ($object)
 			{
 				$this->redis->set("bitstamp_update", time());
-			
+
 				$this->redis->set("bitstamp_data", json_encode($object));
-				
+
 				return $object;
 			}
-		} 
-		else 
+		}
+		else
 		{
 			return json_decode($this->redis->get("bitstamp_data"));
 		}
-		
+
 	}
-	
+
 	// Get Cryptsy API to look at BTC rates
 	public function getCryptsyRates($id)
 	{
 		$ctx = stream_context_create(array('http' => array('timeout' => 3)));
-		
+
 		if ($json = @file_get_contents("https://www.cryptsy.com/api/v2/markets/$id", 0, $ctx))
 		{
 			$a = json_decode($json);
@@ -1265,11 +1266,11 @@ class Util_model extends CI_Model {
 			if ($a->success)
 			{
 				$o[$id] = array(
-					"primaryname" => $a->data->label, 
-					"secondaryname" => $a->data->label, 
-					"primarycode" => $a->data->{'24hr'}->volume, 
-					"secondarycode" => $a->data->{'24hr'}->volume_btc, 
-					"label" => $a->data->label, 
+					"primaryname" => $a->data->label,
+					"secondaryname" => $a->data->label,
+					"primarycode" => $a->data->{'24hr'}->volume,
+					"secondarycode" => $a->data->{'24hr'}->volume_btc,
+					"label" => $a->data->label,
 					"price" => $a->data->last_trade->price,
 					"time" => $a->data->last_trade->timestamp
 				);
@@ -1288,7 +1289,7 @@ class Util_model extends CI_Model {
 		if ($json = @file_get_contents("https://www.cryptsy.com/api/v2/markets"))
 		{
 			$a = json_decode($json);
-			
+
 			if ($a->success)
 			{
 				$o = array();
@@ -1301,7 +1302,7 @@ class Util_model extends CI_Model {
 					}
 				}
 			}
-			
+
 			return json_encode($o);
 		}
 		else
@@ -1309,7 +1310,7 @@ class Util_model extends CI_Model {
 			return false;
 		}
 	}
-	
+
 	// Refresh Cryptsy data IDs/Values
 	public function refreshCryptsyData()
 	{
@@ -1318,20 +1319,20 @@ class Util_model extends CI_Model {
 		{
 			if ($this->redis->get("cryptsy_data_lock"))
 				return true;
-				
+
 			log_message('error', "Refreshing Cryptsy data");
-			
+
 			$this->redis->set("cryptsy_data_lock", true);
-			
+
 			$data = $this->getCryptsyRateIds();
-			
+
 			if ($data)
 			{
 				$this->redis->set("cryptsy_update", time());
-			
+
 				$this->redis->set("cryptsy_data", $data);
 			}
-			
+
 			$this->redis->del("cryptsy_data_lock");
 		}
 	}
@@ -1340,7 +1341,7 @@ class Util_model extends CI_Model {
 	public function updateAltcoinsRates($force = false)
 	{
 		$oldData = ($this->redis->get("altcoins_data")) ? $this->redis->get("altcoins_data") : array("error" => "true");
-		
+
 		// wait 1d before recheck
 		if (time() > ($this->redis->get("altcoins_update")+3600) || $force)
 		{
@@ -1348,9 +1349,9 @@ class Util_model extends CI_Model {
 				return $oldData;
 
 			$this->redis->set("altcoins_data_lock", true);
-			
+
 			log_message('error', "Refreshing Altcoins rates data");
-			
+
    			$o = false;
 			if ($this->redis->get("dashboard_coin_rates"))
     		{
@@ -1364,13 +1365,13 @@ class Util_model extends CI_Model {
     						$o[$altcoin] = $altcoinRate;
     					}
     				}
-    		
+
 					$this->redis->set("altcoins_update", time());
 
 					$this->redis->set("altcoins_data", json_encode($o));
     			}
     		}
-    		
+
 			$this->redis->del("altcoins_data_lock");
 			return $o;
 		}
@@ -1379,15 +1380,15 @@ class Util_model extends CI_Model {
 			return json_decode($oldData);
 		}
 	}
-	
+
 	// Get Cryptsy altdata saved
 	public function getAltcoinsRates()
 	{
 		return ($this->redis->get("altcoins_data")) ? json_decode($this->redis->get("altcoins_data")) : array("error" => "true");
 	}
-	
+
 	// Check Minera ads-free
-	public function checkAdsFree() {		
+	public function checkAdsFree() {
 		$check = @file_get_contents($this->config->item('minera_api_url').'/checkAds/'.$this->generateMineraId());
 		$checkE = json_decode($check);
 
@@ -1398,10 +1399,10 @@ class Util_model extends CI_Model {
 			//log_message("error", "[Ads Free] FALSE");
 			$this->redis->set('is_ads_free', false);
 		}
-		
+
 		return $check;
 	}
-	
+
 	// Get ads url/tags from central server
 	public function getAds($force = false) {
 		if (time() > ($this->redis->get("ads_update")+3600) || $force) {
@@ -1429,16 +1430,16 @@ class Util_model extends CI_Model {
 
 		}
 	}
-		
+
 	/*
 	//
 	// Miner and System related stuff
 	//
 	*/
-		
+
 	// Check if pool is alive
 	public function checkPool($url)
-	{	
+	{
 		$parsedUrl = @parse_url($url);
 
 		if (isset($parsedUrl['host']) && isset($parsedUrl['port']))
@@ -1449,11 +1450,11 @@ class Util_model extends CI_Model {
 				fclose($conn);
 				return true;
 			}
-		}		
-		
+		}
+
 		return false;
 	}
-	
+
 	public function getNetworkMiners()
 	{
 		return json_decode($this->redis->get('network_miners'));
@@ -1463,16 +1464,16 @@ class Util_model extends CI_Model {
 	public function isOnline($network = false)
 	{
 		$ip = "127.0.0.1"; $port = 4028;
-		
-		if ($network) list($ip, $port) = explode(":", $network);	
+
+		if ($network) list($ip, $port) = explode(":", $network);
 
 		if (!($fp = @fsockopen($ip, $port, $errno, $errstr, 1))) return false;
 
 		if (is_resource($fp)) fclose($fp);
-		
+
 		return true;
 	}
-	
+
 	// Check RPi temp
 	public function checkTemp()
 	{
@@ -1491,9 +1492,9 @@ class Util_model extends CI_Model {
 			return false;
 		}
 	}
-	
+
 	public function checkMinerIsUp()
-	{		
+	{
 		// Check if miner is not manually stopped
 		if ($this->redis->get("minerd_status"))
 		{
@@ -1505,13 +1506,13 @@ class Util_model extends CI_Model {
 				// Restart miner
 				$this->minerStart();
 			}
-			
+
 			log_message('error', "Miner is up");
 		}
-		
+
 		return;
 	}
-	
+
 	public function readCustomMinerDir()
 	{
 		$files = array();
@@ -1526,9 +1527,9 @@ class Util_model extends CI_Model {
 			        $files[] = $entry;
 		        }
 		    }
-		
+
 		    closedir($handle);
-		    
+
 		    foreach ($activeCustomMiners as $activeCustomMiner) {
 		       	// Remove active ones from redis if someone has removed the file by hand
 			   	if (in_array($activeCustomMiner, $files))
@@ -1536,19 +1537,19 @@ class Util_model extends CI_Model {
 				   	$newActiveCustomMiners[] = $activeCustomMiner;
 			   	}
 		    }
-		    
+
 		    $this->redis->set('active_custom_miners', json_encode($newActiveCustomMiners));
 		}
-		
+
 		return $files;
 	}
-	
+
 	public function deleteCustomMinerFile($file)
 	{
 		$r = shell_exec("sudo rm ".FCPATH.'minera-bin/custom/'.str_replace(" ", "\ ", $file));
 		return array('success' => $r);
 	}
-	
+
 	// Refresh miner confs
 	public function refreshMinerConf()
 	{
@@ -1556,27 +1557,27 @@ class Util_model extends CI_Model {
 		if (file_exists(FCPATH."miners_conf.json") && time() > ($this->redis->get("miners_conf_update")+86400*7))
 		{
 			log_message('error', "Refreshing Miners conf data");
-			
+
 			$data = json_decode(file_get_contents(FCPATH."miners_conf.json"), true);
-			
+
 			if ($data)
 			{
 				$this->redis->set("miners_conf_update", time());
-			
+
 				$this->redis->set("miners_conf", json_encode($data));
 			}
 		}
-		
+
 		return $this->redis->get("miners_conf");
 	}
-	
+
 	public function is_valid_domain_name($domain_name)
 	{
 	    return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain_name) //valid chars check
             && preg_match("/^.{1,253}$/", $domain_name) //overall length check
             && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domain_name)   ); //length of each label
 	}
-	
+
 	public function setSystemHostname($hostname) {
 		if($this->is_valid_domain_name($hostname))
 		{
@@ -1584,28 +1585,28 @@ class Util_model extends CI_Model {
 			exec("echo ".$hostname." | sudo tee /etc/hostname");
 			exec("echo 127.0.0.1     ".$hostname." | sudo tee --append /etc/hosts");
 		    return true;
-		} 
-		else 
+		}
+		else
 		{
-			return false;	
+			return false;
 		}
 	}
-	
+
 	public function setSystemUserPassword($password) {
 		exec("echo 'minera:".$password."' | sudo -S /usr/sbin/chpasswd");
 		return true;
 	}
-	
+
 	// Call shutdown cmd
 	public function shutdown()
 	{
 		log_message('error', "Shutdown cmd called");
-		
+
 		$this->minerStop();
 		$this->redis->del("cron_lock");
 		$this->redis->command("BGSAVE");
 		sleep(2);
-		
+
 		exec("sudo shutdown -h now");
 
 		return true;
@@ -1620,33 +1621,33 @@ class Util_model extends CI_Model {
 		$this->redis->del("cron_lock");
 		$this->redis->command("BGSAVE");
 		sleep(2);
-		
+
 		exec("sudo reboot");
 
 		return true;
 	}
-	
+
 	// Write rc.local startup file
 	public function saveStartupScript($minerSoftware, $delay = 5, $extracommands = false)
 	{
 		$this->switchMinerSoftware($minerSoftware);
-		
+
 		$command = array($this->config->item("screen_command"), $this->config->item("minerd_command"), $this->getCommandline());
-		
+
 		$rcLocal = file_get_contents(FCPATH."rc.local.minera");
-		
+
 		$rcLocal .= "\nredis-cli set minerd_running_software $minerSoftware\nsleep $delay\nsu - ".$this->config->item('system_user').' -c "'.implode(' ', $command)."\"\n$extracommands\nexit 0";
-		
+
 		file_put_contents('/etc/rc.local', $rcLocal);
-		
+
 		log_message('error', "Startup script saved: ".var_export($rcLocal, true));
 
 		return true;
 	}
-	
+
 	public function tailFile($filename, $lines) {
 		$file = file(FCPATH.APPPATH."logs/".$filename);
-		
+
 		if (count($file) > 0) {
 			for ($i = count($file)-$lines; $i < count($file); $i++) {
 				if ($i >= 0 && $file[$i]) {
@@ -1656,7 +1657,7 @@ class Util_model extends CI_Model {
 		} else {
 			$readlines = array('No logs found');
 		}
-		
+
 		return $readlines;
 	}
 
@@ -1671,34 +1672,34 @@ class Util_model extends CI_Model {
 			$this->switchMinerSoftware(false, true);
 			return $this->network_miner->selectPool($poolId, $network);
 		}
-			
+
 		return $this->miner->selectPool($poolId, $network);
 	}
-	
+
 	public function addPool($url, $user, $pass, $network = false)
 	{
 		if ($network) {
 			$this->switchMinerSoftware(false, true);
 			return $this->network_miner->addPool($url, $user, $pass, $network);
 		}
-		
+
 		return $this->miner->addPool($url, $user, $pass, $network);
 	}
-	
+
 	public function removePool($poolId, $network = false)
 	{
 		if ($network) {
 			$this->switchMinerSoftware(false, true);
 			return $this->network_miner->removePool($poolId, $network);
 		}
-					
+
 		return $this->miner->removePool($poolId, $network);
 	}
-			
+
 	// Stop miner
 	public function minerStop()
 	{
-		// Check if there is a running miner and 
+		// Check if there is a running miner and
 		// stop that before start another one
 		$software = $this->redis->get("minerd_running_software");
 		if ($software)
@@ -1710,23 +1711,23 @@ class Util_model extends CI_Model {
 		{
 			$this->switchMinerSoftware();
 		}
-		
+
 		$minerdUser = ($this->redis->get("minerd_running_user")) ? $this->redis->get("minerd_running_user") : $this->config->item("system_user");
 
 		exec("sudo -u " . $minerdUser . " " . $this->config->item("screen_command_stop"));
 		exec("sudo -u " . $minerdUser . " /usr/bin/killall -s9 ".$this->config->item("minerd_binary"));
-		
+
 		$this->redis->del("latest_stats");
 		$this->redis->set("minerd_status", false);
 		$this->redis->set("minerd_running_software", false);
-		
+
 		log_message('error', $this->_minerdSoftware." stopped");
-		
+
 		$this->redis->command("BGSAVE");
-					
+
 		return true;
 	}
-	
+
 	// Start miner
 	public function minerStart()
 	{
@@ -1738,9 +1739,9 @@ class Util_model extends CI_Model {
 		$this->redis->set("minerd_running_software", $software);
 
 		$this->switchMinerSoftware();
-		
+
 		$this->redis->set("minerd_running_user", $this->config->item("system_user"));
-		
+
 		// If it's cgminer with logging we need to create a script and give that to screen
 		$specialLog = null;
 		if ($this->config->item("minerd_special_log") && $this->redis->get("minerd_log"))
@@ -1749,31 +1750,31 @@ class Util_model extends CI_Model {
 			{
 				shell_exec("sudo -u " . $this->config->item("system_user") . " sudo chmod 777 " . FCPATH."minera-bin/cgminerStartupScript");
 			}
-		
+
 			$script = "#!/bin/bash\n\n".$this->config->item("minerd_command")." ".$this->getCommandline()." 2>".$this->config->item("minerd_log_file");
-			
+
 			file_put_contents(FCPATH."minera-bin/cgminerStartupScript", $script);
-			
+
 			$command = array($this->config->item("screen_command"), FCPATH."minera-bin/cgminerStartupScript");
 		}
 		else
 		{
 			$command = array($this->config->item("screen_command"), $this->config->item("minerd_command"), $this->getCommandline());
 		}
-		
+
 		$finalCommand = "sudo -u " . $this->config->item("system_user") . " " . implode(" ", $command);
-		
+
 		exec($finalCommand, $out);
-		
+
 		log_message('error', "Minerd started with command: $finalCommand - Output was: ".var_export($out, true));
-		
+
 		sleep(9);
-		
+
 		if (file_exists($this->config->item('minerd_log_file')))
 		{
 			shell_exec("sudo -u " . $this->config->item("system_user") . " sudo chmod 666 " . $this->config->item('minerd_log_file'));
 		}
-		
+
 		/*
 		// DISABLED as the service shuts down
 		if ($this->isEnableMobileminer())
@@ -1785,32 +1786,32 @@ class Util_model extends CI_Model {
 				{
 					$mmPools[] = $key."||".$pool->username."@".$pool->url;
 				}
-				
+
 				$params = array("emailAddress" => $this->redis->get("mobileminer_email"), "applicationKey" => $this->redis->get("mobileminer_appkey"), "apiKey" => $this->config->item('mobileminer_apikey'), "machineName" => $this->redis->get("mobileminer_system_name"));
-				
+
 				$this->useCurl($this->config->item('mobileminer_url_poolsinput'), $params, "POST", json_encode($mmPools));
-				
+
 				log_message("error", "Sent MobileMiner pools: ".json_encode($mmPools));
-			}			
+			}
 		}
 		*/
-		
+
 		$this->redis->command("BGSAVE");
-		
+
 		return true;
 	}
-	
+
 	// Restart minerd
 	public function minerRestart()
 	{
 		$this->resetCounters();
-	
+
 		$this->minerStop();
 		sleep(1);
-	
+
 		$this->minerStart();
 		sleep(1);
-		
+
 		return true;
 	}
 
@@ -1827,11 +1828,11 @@ class Util_model extends CI_Model {
 			"rejected" => 0,
 			"shares" => 0
 		);
-		
+
 		// Reset the counters
 		$this->redis->command("ZADD minerd_totals_stats ".time()." ".json_encode($reset));
 	}
-	
+
 	// Check if cron is running and force the deletion of lock if not.
 	public function checkCronIsRunning()
 	{
@@ -1841,15 +1842,15 @@ class Util_model extends CI_Model {
 		{
 			log_message("error", "Cron running...");
 			return true;
-		}			
+		}
 		else
 		{
 			log_message("error", "Cron NOT running. Deleting lock.");
 			$this->redis->del("cron_lock");
-			return false;	
+			return false;
 		}
 	}
-		
+
 	// Call update cmd
 	public function update()
 	{
@@ -1857,47 +1858,47 @@ class Util_model extends CI_Model {
 		$this->minerStop();
 		$this->resetCounters();
 		sleep(3);
-		
+
 		$lines = array();
 		// Pull the latest code from github
 		exec("cd ".FCPATH." && sudo -u " . $this->config->item("system_user") . " sudo git fetch --all && sudo git reset --hard origin/master", $out);
-		
+
 		$logmsg = "Update request from ".$this->currentVersion()." to ".$this->redis->command("HGET minera_update new_version")." : ".var_export($out, true);
-		
+
 		$lines[] = $logmsg;
-		
+
 		log_message('error', $logmsg);
 
-		$this->redis->del("altcoins_update");		
+		$this->redis->del("altcoins_update");
 		$this->util_model->updateAltcoinsRates(true);
 		$this->redis->del("minera_update");
 		$this->redis->del("minera_version");
 		$this->checkUpdate();
-				
+
 		// Run upgrade script
 		exec("cd ".FCPATH." && sudo -u " . $this->config->item("system_user") . " sudo ./upgrade_minera.sh", $out);
 
 		$logmsg = "Running upgrade script".var_export($out, true);
 
 		$lines[] = $logmsg;
-				
+
 		log_message('error', $logmsg);
-		
+
 		$logmsg = "End Update";
 		$lines[] = $logmsg;
 		log_message('error', $logmsg);
-		
+
 		sleep(5);
 		$this->minerStart();
-		
+
 		return json_encode($lines);
 	}
-	
+
 	// Reset Minera data
 	public function reset($action)
 	{
 		switch($action)
-		{					
+		{
 		    case "charts":
 				$this->redis->del("minerd_totals_stats");
 				$this->redis->del("minerd_delta_stats");
@@ -1919,15 +1920,15 @@ class Util_model extends CI_Model {
 		    default:
 		    	$o = json_encode(array("err" => true));
 		}
-		
+
 		return $o;
 	}
-	
-	public function factoryReset() 
+
+	public function factoryReset()
 	{
 		$this->minerStop();
 		sleep(3);
-		
+
 		// SET
 		$this->redis->set("minerd_autorestart", 0);
 		$this->redis->set("minerd_delaytime", 5);
@@ -1975,7 +1976,7 @@ class Util_model extends CI_Model {
 		$this->redis->set("minerd_api_allow_extra", "");
 		$this->redis->set("browser_mining", 1);
 		$this->redis->set("browser_mining_threads", 2);
-		
+
 		// DEL
 		$this->redis->del("minera_version");
 		$this->redis->del("active_custom_miners");
@@ -2002,13 +2003,13 @@ class Util_model extends CI_Model {
 		$this->redis->del("import_data_tmp");
 		$this->redis->del("bitstamp_update");
 		$this->redis->del("altcoins_update");
-		
+
 		// Add donation pool
 		$this->autoAddMineraPool();
-		
-		return true;		
+
+		return true;
 	}
-	
+
 	// Check Minera version
 	public function checkUpdate()
 	{
@@ -2019,19 +2020,19 @@ class Util_model extends CI_Model {
 
 			$latestConfig = $this->getRemoteJsonConfig();
 			$localVersion = $this->currentVersion();
-			
+
 			if (isset($latestConfig->version)) {
 				$this->redis->command("HSET minera_update timestamp ".time());
 				$this->redis->command("HSET minera_update new_version ".$latestConfig->version);
-	
+
 				if ($latestConfig->version != $localVersion)
 				{
 					log_message('error', "Found a new Minera update");
-	
+
 					$this->redis->command("HSET minera_update value 1");
 					return true;
 				}
-			
+
 				$this->redis->command("HSET minera_update value 0");
 			}
 		}
@@ -2060,19 +2061,19 @@ class Util_model extends CI_Model {
 			return $this->redis->command("HGET minera_version value");
 		}
 	}
-	
+
 	// Set the dashboard box status
 	public function setBoxStatus($boxId, $status) {
 		if ($boxId) {
 			$boxStatuses = json_decode($this->redis->get('box_status'), true);
-			
+
 			if (is_array($boxStatuses)) {
 				$boxStatuses[$boxId] = $status;
 			} else {
 				$boxStatuses = array();
 				$boxStatuses[$boxId] = $status;
 			}
-			
+
 			$this->redis->set('box_status', json_encode($boxStatuses));
 
 			return array("success" => true, $boxId => $status);
@@ -2086,7 +2087,7 @@ class Util_model extends CI_Model {
 
 		return $result[0];
 	}
-	
+
 	// Generate a uniq hash ID for Minera System ID
 	public function generateMineraId()
 	{
@@ -2106,8 +2107,8 @@ class Util_model extends CI_Model {
 		$this->redis->set("minera_system_id", $id);
 		return $id;
 	}
-	
-	// Get Remote configuration from Github 
+
+	// Get Remote configuration from Github
 	public function getRemoteJsonConfig()
 	{
 		$remoteConfig = @file_get_contents($this->config->item('remote_config_url'));
@@ -2116,20 +2117,20 @@ class Util_model extends CI_Model {
 
 		return json_decode($remoteConfig);
 	}
-	
-	// Return saved remote configuration from local Redis 
+
+	// Return saved remote configuration from local Redis
 	public function returnRemoteJsonConfig()
 	{
 		return json_decode($this->redis->get("minera_remote_config"));
 	}
-	
+
 	// Send anonymous stats to Minera main system
 	public function sendAnonymousStats($id, $stats)
 	{
 		$params = array("id" => $id);
 
 		log_message("error", "Sending anonymous stats");
-		
+
 		$result = $this->useCurl($this->config->item('minera_api_url')."/sendMinerStats/".$id, false, "POST", json_encode($stats));
 
 		return $result;
@@ -2147,13 +2148,13 @@ class Util_model extends CI_Model {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
 	/*
 	// Check what kind of algo is used to mine
-	*/	
+	*/
 	public function checkAlgo($running = true)
 	{
 		$minerdCommand = $this->getCommandLine();
@@ -2165,19 +2166,19 @@ class Util_model extends CI_Model {
 			if ($scryptEnabled || preg_match("/scrypt/i", $minerdCommand) || $this->redis->get("minerd_running_software") == "cpuminer")
 			{
 				$algo = "Scrypt";
-			}			
+			}
 		}
 		else
 		{
 			if ($scryptEnabled || preg_match("/scrypt/i", $minerdCommand) || $this->redis->get('minerd_software') == "cpuminer")
 			{
 				$algo = "Scrypt";
-			}	
+			}
 		}
-		
+
 		return $algo;
 	}
-	
+
 	/*
 	// Call the MobileMinera API to send device stats
 	*/
@@ -2186,25 +2187,25 @@ class Util_model extends CI_Model {
 		if ($this->isEnableMobileminer()) {
 			$stats = json_decode($this->getParsedStats($this->getMinerStats()));
 			$networkStats = $this->getNetworkMinerStats(true);
-			
+
 			// Local Pool data
 			$poolUrl = (isset($stats->pool->url)) ? $stats->pool->url : "no pool configured";
 			$poolStatus = (isset($stats->pool->alive) && $stats->pool->alive) ? "Alive" : "Dead";
-			
+
 			// Local Algo data
 			$algo = $this->checkAlgo();
-			
-			// Params		
+
+			// Params
 			$params = array(
-				"email" => $this->redis->get("mobileminer_email"), 
-				"token" => $this->redis->get("mobileminer_appkey"), 
+				"email" => $this->redis->get("mobileminer_email"),
+				"token" => $this->redis->get("mobileminer_appkey"),
 				"apiKey" => $this->config->item('mobileminer_apikey'),
 				"systemName" => $this->redis->get("mobileminer_system_name"),
 				"algorithm" => $algo,
 				"minerSoftware" => "cgminer"
 			);
-			
-			// Local data				
+
+			// Local data
 			$i = 0; $data = array();
 			if (isset($stats->devices) && count($stats->devices) > 0)
 			{
@@ -2215,7 +2216,7 @@ class Util_model extends CI_Model {
 						"poolIndex" => 0,
 						"poolUrl" => $poolUrl,
 						"poolStatus" => $poolStatus,
-						"deviceId" => $i,                                            
+						"deviceId" => $i,
 						"status" => $this->isOnline(),
 						"temperature" => false,
 						"averageHashrate" => ($device->hashrate > 0) ? round(($device->hashrate/1000), 0) : 0,
@@ -2230,7 +2231,7 @@ class Util_model extends CI_Model {
 					$i++;
 				}
 			}
-			
+
 			if (count($data) > 0)
 			{
 				$data_string = json_encode($data);
@@ -2239,37 +2240,37 @@ class Util_model extends CI_Model {
 				{
 					// Sending data to Mobile Miner
 					log_message('error', "Sending data to Mobileminer");
-		
+
 					$resultGetActions = $this->useCurl($this->config->item('mobileminera_url_stats'), $params, "POST", $data_string);
 					echo $resultGetActions;
 				}
 			}
 		}
 	}
-	
+
 	/*
 	// Call the Mobileminer API to send device stats
 	*/
 	public function callMobileminer()
 	{
 		return true;
-		
+
 		if ($this->isEnableMobileminer())
 		{
 			$stats = json_decode($this->getParsedStats($this->getMinerStats()));
 			$networkStats = $this->getNetworkMinerStats(true);
-			
-			// Params		
+
+			// Params
 			$params = array("emailAddress" => $this->redis->get("mobileminer_email"), "applicationKey" => $this->redis->get("mobileminer_appkey"), "apiKey" => $this->config->item('mobileminer_apikey'), "fetchCommands" => "true");
-			
+
 			// Local Pool data
 			$poolUrl = (isset($stats->pool->url)) ? $stats->pool->url : "no pool configured";
 			$poolStatus = (isset($stats->pool->alive) && $stats->pool->alive) ? "Alive" : "Dead";
-			
+
 			// Local Algo data
 			$algo = $this->checkAlgo();
-			
-			// Local data				
+
+			// Local data
 			$i = 0; $data = array();
 			if (isset($stats->devices) && count($stats->devices) > 0)
 			{
@@ -2286,7 +2287,7 @@ class Util_model extends CI_Model {
 						"FullName" => $devName,
 						"PoolIndex" => 0,
 						"PoolName" => $poolUrl,
-						"Index" => $i,                                            
+						"Index" => $i,
 						"DeviceID" => $i,
 						"Enabled" => $this->isOnline(),
 						"Status" => $poolStatus,
@@ -2311,7 +2312,7 @@ class Util_model extends CI_Model {
 					$i++;
 				}
 			}
-			
+
 			if (count($networkStats) > 0)
 			{
 				foreach ($networkStats as $netMinerName => $netMiner)
@@ -2320,8 +2321,8 @@ class Util_model extends CI_Model {
 					$netPoolUrl = (isset($netMiner->pool->url)) ? $netMiner->pool->url : "no pool configured";
 					$netPoolStatus = (isset($netMiner->pool->alive) && $netMiner->pool->alive) ? "Alive" : "Dead";
 					$netEnabled = (isset($netMiner->devices)) ? true : false;
-		
-					// Network data							
+
+					// Network data
 					$i = 0;
 					if (isset($netMiner->devices) && count($netMiner->devices) > 0)
 					{
@@ -2338,7 +2339,7 @@ class Util_model extends CI_Model {
 								"FullName" => $netDevName,
 								"PoolIndex" => 0,
 								"PoolName" => $netPoolUrl,
-								"Index" => $i,                                            
+								"Index" => $i,
 								"DeviceID" => $i,
 								"Enabled" => $netEnabled,
 								"Status" => $netPoolStatus,
@@ -2362,40 +2363,40 @@ class Util_model extends CI_Model {
 							);
 							$i++;
 						}
-					}					
+					}
 				}
 			}
-			
+
 			//log_message("error", var_export($networkStats, true));
-			
-			$resultGetActions = false; 
-			
+
+			$resultGetActions = false;
+
 			if (count($data) > 0)
 			{
 				$data_string = json_encode($data);
-				
+
 				if (strlen($data_string) > 0)
 				{
 					// Sending data to Mobile Miner
 					log_message('error', "Sending data to Mobileminer");
-		
+
 					$resultGetActions = $this->useCurl($this->config->item('mobileminer_url_stats'), $params, "POST", $data_string);								}
 			}
-						
-			/*	
+
+			/*
 			// Looking for actions to do
 			*/
 			if ($resultGetActions)
-			{				
+			{
 				$resultGetActions = json_decode($resultGetActions);
 				//log_message("error", var_export($resultGetActions, true));
 				if (is_array($resultGetActions) && count($resultGetActions) > 0)
 				{
 					$actionToDo = $resultGetActions[0];
-					
+
 					$paramsGetActions = array("emailAddress" => $this->redis->get("mobileminer_email"), "applicationKey" => $this->redis->get("mobileminer_appkey"), "apiKey" => $this->config->item('mobileminer_apikey'), "machineName" => $actionToDo->Machine->Name);
 
-					
+
 					// Do the mobileMiner action
 					if ($actionToDo->CommandText == "START")
 					{
@@ -2422,56 +2423,56 @@ class Util_model extends CI_Model {
 							}
 						}
 					}
-					
+
 					log_message('error', 'Action done: '.json_encode($resultGetActions));
-					
+
 					/*
 					// Remove MobileMiner action by ID
 					*/
 					$paramsGetActions['commandId'] = $actionToDo->Id;
-					
+
 					$this->useCurl($this->config->item('mobileminer_url_remotecommands'), $paramsGetActions, "DELETE");
 
 					log_message('error', 'Removed MobileMiner actions with ID: '.$actionToDo->Id);
-					
+
 				}
 				else
 				{
-					log_message('error', 'No MobileMiner actions to do.');						
+					log_message('error', 'No MobileMiner actions to do.');
 				}
 			}
 
 			return true;
-				
+
 		}
-		
+
 		return false;
 	}
-	
-	public function checkNetworkDevice($ip, $port=4028) 
-	{		
+
+	public function checkNetworkDevice($ip, $port=4028)
+	{
 		$connection = @fsockopen($ip, 4028, $errno, $errstr, 5);
 	    if (is_resource($connection))
-	    {	
+	    {
 	        fclose($connection);
-	        
+
 	        return true;
 	    }
-	    
+
 	    return false;
 	}
-	
+
 	public function discoveryNetworkDevices() {
 		$localIp = $_SERVER['SERVER_ADDR'];
 
 		list($w, $x, $y, $z) = explode('.', $localIp);
-				
+
 		$range = implode(".", array($w, $x, $y, '0'))."/24";
 		$addresses = array();
 		$opens = array();
-		
+
 		@list($ip, $len) = explode('/', $range);
-		
+
 		if (($min = ip2long($ip)) !== false) {
 		  $max = ($min | (1<<(32-$len))-1);
 		  for ($i = $min; $i < $max; $i++)
@@ -2480,39 +2481,39 @@ class Util_model extends CI_Model {
 
 		$stored = $this->getNetworkMiners();
 		$current = array($localIp);
-		
+
 		foreach ($stored as $net) {
 			$current[] = $net->ip;
 		}
-		
+
 		foreach ($addresses as $address)
 		{
 		    $connection = @fsockopen($address, 4028, $errno, $errstr, 1);
-		
+
 		    if (is_resource($connection) && !in_array($address, $current))
 		    {
 		        $opens[] = array('ip' => $address, 'name' => $this->getRandomStarName());
-		
+
 		        fclose($connection);
 		    }
 		}
-		
+
 		return $opens;
-		
+
 	}
-	
+
 	public function getRandomStarName() {
 		$array = array("Andromeda", "Antlia", "Apus", "Aquarius", "Aquila", "Ara", "Aries", "Auriga", "Caelum", "Camelopardalis", "Cancer", "Canes Venatici", "Canis Major", "Canis Minor", "Capricornus", "Carina", "Cassiopeia", "Centaurus", "Cepheus", "Cetus", "Chamaeleon", "Circinus", "Columba", "Coma Berenices", "Corona Austrina", "Corona Borealis", "Corvus", "Crater", "Crux", "Cygnus", "Delphinus", "Dorado", "Draco", "Equuleus", "Eridanus", "Fornax", "Gemini", "Grus", "Hercules", "Horologium", "Hydra", "Hydrus", "Indus", "Lacerta", "Leo", "Leo Minor", "Lepus", "Libra", "Lupus", "Lynx", "Lyra", "Mensa", "Microscopium", "Monoceros", "Musca", "Norma", "Octans", "Ophiuchus", "Orion", "Pavo", "Pegasus", "Perseus", "Phoenix", "Pictor", "Pisces", "Piscis Austrinus", "Puppis", "Pyxis", "Reticulum", "Sagitta", "Sagittarius", "Scorpius", "Sculptor", "Scutum", "Serpens", "Sextans", "Taurus", "Telescopium", "Triangulum", "Triangulum Australe", "Tucana", "Ursa Major", "Ursa Minor", "Vela", "Virgo", "Volans", "Vulpecula");
-		
+
 		return $array[array_rand($array)];
 	}
-	
+
 	public function setTimezone($timezone)
 	{
 		exec("echo '".$timezone."' | sudo tee /etc/timezone && sudo dpkg-reconfigure -f noninteractive tzdata");
 		$this->redis->set("minera_timezone", $timezone);
 	}
-	
+
 	public function convertHashrate($hash)
 	{
 		if ($hash > 900000000)
@@ -2524,19 +2525,19 @@ class Util_model extends CI_Model {
 		else
 			return $hash;
 	}
-	
+
 	// Check Internet connection
 	public function checkConn()
 	{
 		if(!$fp = fsockopen("www.google.com", 80)) {
 			return false;
 		}
-		
+
 		if (is_resource($fp)) fclose($fp);
-		
+
 		return true;
 	}
-	
+
 	public function getSysUptime()
 	{
 		return strtok( exec( "cat /proc/uptime" ), "." );
@@ -2551,34 +2552,34 @@ class Util_model extends CI_Model {
 	public function fakeMiner()
 	{
 		$server = stream_socket_server("tcp://127.0.0.1:1337", $errno, $errorMessage);
-		
+
 		if ($server === false) {
 		    throw new UnexpectedValueException("Could not bind to socket: $errorMessage");
 		}
-		
+
 		for (;;) {
 		    $client = @stream_socket_accept($server);
-		
-		    if ($client) 
-		    {    
+
+		    if ($client)
+		    {
 		    	// Inject stdin
 		        //stream_copy_to_stream($client, $client);
-		        
+
 		        // Inject some json
 		        $j = file_get_contents('test.json');
 		        fwrite($client, $j);
-		        
+
 		        fclose($client);
 		    }
 		}
 	}
-	
+
 	function get_furl($url) {
 	    $furl = false;
-	   
+
 	    // First check response headers
 	    $headers = get_headers($url);
-	   
+
 	    // Test for 301 or 302
 	    if(preg_match('/^HTTP\/\d\.\d\s+(301|302)/',$headers[0]))
 	    {
@@ -2592,10 +2593,10 @@ class Util_model extends CI_Model {
 	    }
 	    // Set final URL
 	    $furl = ($furl) ? $furl : $url;
-	
+
 	    return $furl;
 	}
-	
+
 	public function useCurl($url, $params, $method, $post = false)
 	{
 		if ($params)
@@ -2621,7 +2622,7 @@ class Util_model extends CI_Model {
 		}
 
 		$result = curl_exec($ch);
-		
+
 		if(!curl_errno($ch))
 		{
 			$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -2629,7 +2630,7 @@ class Util_model extends CI_Model {
 		}
 
 		curl_close($ch);
-		
+
 		return $result;
 	}
 }
