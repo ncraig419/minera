@@ -259,6 +259,6 @@ body > .header { position: fixed !important; }
 
 /* SIT */
 
-#box-donation {
+#box-donation, .menu-local-pools-box, .menu-local-miner-box, #box-local-pools, #box-local-miner, #menu-donation-box, #customer-miners-box {
     display: none;
 }
