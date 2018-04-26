@@ -1201,7 +1201,8 @@ class Util_model extends CI_Model {
 
 	// Get Bitstamp API to look at BTC/USD rates
 	public function getBtcUsdRates()
-	{
+    {
+        return false;
 		// wait 1d before recheck
 		if (time() > ($this->redis->get("bitstamp_update")+600))
 		{
@@ -1339,7 +1340,8 @@ class Util_model extends CI_Model {
 
 	// Refresh Cryptsy data IDs/Values
 	public function updateAltcoinsRates($force = false)
-	{
+    {
+        return false;
 		$oldData = ($this->redis->get("altcoins_data")) ? $this->redis->get("altcoins_data") : array("error" => "true");
 
 		// wait 1d before recheck
