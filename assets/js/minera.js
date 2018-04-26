@@ -611,7 +611,7 @@ $(function() {
 	});
 
 	// Scroll ad
-	if (thisSection !== 'lockscreen') {
+	/*if (thisSection !== 'lockscreen') {
 	    if ($(document).scrollTop() > 64) {
 			$('.scroll-ad').fadeIn();
 		}
@@ -623,7 +623,7 @@ $(function() {
 				$('.scroll-ad').fadeOut();
 			}
 		});
-	}
+	}*/
 
 	// Add responsive class to datatables
 	$('.responsive-datatable-minera').on('DOMChanged', function () {
